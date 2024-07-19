@@ -5,7 +5,7 @@ const Home: FC = () => {
 
   return (
         <div className="bg-red-200">
-            HOME
+            HOME 민재 수정
         </div>
 
   );
