@@ -5,7 +5,7 @@ const MinjaePage: FC = () => {
 
   return (
         <div>
-            민재 체크 : ererer
+            민재 체크 : ererer zzzzzzz
         </div>
 
   );
