@@ -6,7 +6,7 @@ const MinjaePage: FC = () => {
   return (
         <div>
 
-            minjae 생성 !!!!!!!!!!!!!!!!
+            바꾸기
 
         </div>
 
