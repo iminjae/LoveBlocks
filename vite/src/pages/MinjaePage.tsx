@@ -1,6 +1,6 @@
 import { FC, useState } from "react";
 import { ethers } from 'ethers';
-import SimpleWalletABI from '../abis/transferWithSignature.json';
+import SimpleWalletABI from '../abis/transferWithSignature.json'
 import { JsonRpcSigner } from "ethers";
 
 const MinjaePage: FC = () => {
