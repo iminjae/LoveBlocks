@@ -48,13 +48,13 @@ const Header: FC<HeaderProps> = ({ signer, setSigner}) => {
 
         <div className="container-style h-20 flex justify-between items-center p-10 bg-blue-200">
             <button
-              onClick={() => navigate("/hyeonyong")}
+              onClick={() => navigate("/hyunyong")}
             >
                 현용
             </button>
 
             <button
-              onClick={() => navigate("/seongwoo")}
+              onClick={() => navigate("/sungwoo")}
             >
                 성우
             </button>
