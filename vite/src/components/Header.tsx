@@ -5,16 +5,18 @@ import { useNavigate } from "react-router-dom";
 interface HeaderProps {
   signer: JsonRpcSigner | null;
   setSigner: Dispatch<SetStateAction<JsonRpcSigner | null>>;
+  provider: ethers.Provider | null;
+  setProvider: Dispatch<SetStateAction<ethers.Provider | null>>;
 }
 
-const Header: FC<HeaderProps> = ({ signer, setSigner }) => {
+const Header: FC<HeaderProps> = ({ signer, setSigner, setProvider }) => {
   const navigate = useNavigate();
 
   const getSigner = async () => {
     if (!window.ethereum) return;
 
     const provider = new ethers.BrowserProvider(window.ethereum);
-
+    setProvider(provider);
     setSigner(await provider.getSigner());
   };
 
@@ -22,6 +24,7 @@ const Header: FC<HeaderProps> = ({ signer, setSigner }) => {
     try {
       getSigner();
       switchToArbitrum();
+      
       localStorage.setItem("isLogin", "true");
     } catch (error) {
       console.error(error);
