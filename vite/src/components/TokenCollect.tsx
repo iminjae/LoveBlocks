@@ -121,13 +121,13 @@ const TokenCollect: FC<TokenCollectProps> = ({ signer }) => {
   return (
     <div>
       <div className="flex flex-col justify-center items-center">
-        {holdTokens.map((token) => (
-          // <TokenInfo
-          //   key={token.symbol}
-          //   name={token.name}
-          //   tokenCnt={token.amount}
-          // ></TokenInfo>
-        ))}
+        {/* {holdTokens.map((token) => (
+          <TokenInfo
+            key={token.symbol}
+            name={token.name}
+            tokenCnt={token.amount}
+          ></TokenInfo>
+        ))} */}
       </div>
     </div>
   );
