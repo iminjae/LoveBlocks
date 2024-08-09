@@ -1,27 +1,136 @@
-import React, { FC } from "react";
+import { JsonRpcSigner } from "ethers";
+import { FC, useEffect, useState } from "react";
+import axios from "axios";
+import { ethers } from "ethers";
+import TokenInfo from "./TokenInfo";
 
-const TokenCollect: FC = () => {
-  // 블록 범위 설정
-//   const fromBlock = 20330300;
-//   const toBlock = "latest";
+interface TokenCollectProps {
+  signer: JsonRpcSigner;
+}
+interface TokenCoinGecko {
+  id: string;
+  name: string;
+  platforms: {
+    [key: string]: string | null;
+  };
+  symbol: string;
+}
+interface HoldToken {
+  tokenAddress: string;
+  amount: string;
+  name: string;
+  symbol: string;
+  decimal: string;
+}
 
-  // ERC20 ABI
-  //   const erc20Abi = [
-  //     "event Transfer(address indexed from, address indexed to, uint amount)",
-  //   ];
+const TokenCollect: FC<TokenCollectProps> = ({ signer }) => {
+  const [tokenInfos, setTokenInfos] = useState<TokenCoinGecko[]>([]);
+  const [tokenAddrs, setTokenAddrs] = useState<string[]>([]);
+  const [holdTokens, setHoldTokens] = useState<HoldToken[]>([]);
 
-  //   async function getTokenTransfers() {
-  //     const logs = await window.ethereum.getLogs({
-  //       fromBlock: fromBlock,
-  //       toBlock: toBlock,
-  //       topics: [
-  //         ethers.id("Transfer(address,address,uint256)"),
-  //         null,
-  //         // ethers.encode(["address"], [signer.address])
-  //       ],
-  //     });
+  const tokenAbi = [
+    "function balanceOf(address _owner) view returns (uint256 balance)",
+    "function symbol() view returns (string)",
+    "function name() view returns (string)",
+    "function decimals() view returns (uint8)",
+  ];
 
-  return <div>Component</div>;
+  //1. 코인게코 api를 사용해서 아비트럼 체인 내의 토큰 주소를 전부 가져온다
+  async function getArbitrumTokensAddress() {
+    try {
+      const response = await axios.get(
+        "https://api.coingecko.com/api/v3/coins/list?include_platform=true"
+      );
+
+      //토큰 정보 전체 저장
+      const tokens = response.data.filter((token: TokenCoinGecko) => {
+        const keys = token.platforms ? Object.keys(token.platforms) : [];
+        const tokenAddr = keys.some(
+          (key) => key?.toLowerCase() === "arbitrum-one"
+        );
+        return tokenAddr;
+      });
+      setTokenInfos(tokens);
+
+      //토큰 주소만 저장
+      const tokenAddr = tokens.map((token: TokenCoinGecko) => {
+        const platform = token.platforms ?? {};
+        return platform["arbitrum-one"];
+      });
+      setTokenAddrs(tokenAddr);
+
+      console.log("getArbitrumTokensAddress success");
+    } catch (error) {
+      console.error("getArbitrumTokensAddress, ", error);
+    }
+  }
+
+  //2. 각 토큰 주소에 signer의 지갑주소로 balanceOf
+  async function getBalance(tokenAddrs: string[]) {
+    const balanceData = tokenAddrs.map(async (tokenAddr) => {
+      const contract = new ethers.Contract(
+        tokenAddr,
+        tokenAbi,
+        signer.provider
+      );
+
+      try {
+        const balance = await contract.balanceOf(signer.address);
+        const formattedBalance = ethers.formatUnits(balance, 18);
+
+        const name = await contract.name();
+        const symbol = await contract.symbol();
+        const decimal = await contract.decimals();
+
+        if (Number(formattedBalance) > 0) {
+          return {
+            tokenAddress: tokenAddr,
+            amount: formattedBalance,
+            name,
+            symbol,
+            decimal,
+          };
+        }
+      } catch (error) {
+        // console.error("Get Balance Error, ", error);
+      }
+    });
+
+    const results = await Promise.all(balanceData);
+
+    // 잔액이 있는 토큰만 필터링합니다.
+    const holdTokens = results.filter((result) => result !== undefined);
+    setHoldTokens(holdTokens);
+    // console.log("balanceData: ", holdTokens);
+  }
+
+  useEffect(() => {
+    if (!signer) return;
+    getArbitrumTokensAddress();
+  }, [signer]);
+
+  useEffect(() => {
+    if (!tokenAddrs) return;
+    getBalance(tokenAddrs);
+  }, [tokenAddrs]);
+
+  //토큰을 가져올 때의 실시간 가격 -> USDT랑 ether가격 가져온 상태
+  //토큰abi, 컨트랙트 주소
+  //usdt 스왑할 때 가격 바뀌는 부분에 적용 가능
+
+  return (
+    <div>
+      <div className="flex flex-col justify-center items-center">
+        {holdTokens.map((token) => (
+          // <TokenInfo
+          //   key={token.symbol}
+          //   name={token.name}
+          //   tokenCnt={token.amount}
+          // ></TokenInfo>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default TokenCollect;
