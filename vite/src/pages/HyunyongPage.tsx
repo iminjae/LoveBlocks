@@ -7,10 +7,14 @@ const HyunyongPage: FC = () => {
   const { signer } = useOutletContext<OutletContext>();
 
   return (
-    <div>
-      토큰수집 해보자
-      <TokenCollect signer={signer}></TokenCollect>
-    </div>
+    <>
+      {signer && (
+        <div>
+          토큰수집 해보자
+          <TokenCollect signer={signer}></TokenCollect>
+        </div>
+      )}
+    </>
   );
 };
 
