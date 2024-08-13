@@ -1,0 +1,1 @@
+export const donationContractAddress = "0x50EbABF9A629aE0BEB3a4c5Ad54FF8020A862adA"; //기부 컨트랙트 주소
