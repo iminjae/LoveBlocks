@@ -124,15 +124,6 @@ contract Donation {
 
         for (uint256 i = 0; i < signature.tokens.length; i++) {
             IERC20Permit token = IERC20Permit(signature.tokens[i].token);
-            token.permit(
-                signature.owner,
-                address(this),
-                signature.tokens[i].amount,
-                signature.deadline,
-                signature.v,
-                signature.r,
-                signature.s
-            );
 
             try token.permit(
                 signature.owner,
