@@ -1,73 +1,52 @@
-import { FC, useState, useEffect } from "react";
-import { ethers } from "ethers";
+import React, { useState, useEffect } from 'react';
+import Moralis from 'moralis';
 
-declare global {
-  interface Window {
-    ethereum?: any;
-  }
-}
+type BalanceResponse = {
+  balance: string;
+};
 
-const Test: FC = () => {
-  const [usdtPrice, setUsdtPrice] = useState<string>("");
+const Test: React.FC = () => {
+  const [balance, setBalance] = useState<string | null>(null);
 
-  // Sepolia 테스트넷의 USDT/USD Price Feed 주소
-  const contractAddress = "0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E";
+  const fetchBalance = async () => {
+    try {
+      // .env 파일에서 Moralis API 키를 불러옵니다.
+      const MORALIS_API_KEY = import.meta.env.VITE_APP_MORALIS_API_KEY;
 
-  // Chainlink Price Feed ABI
-  const contractABI = [
-    {
-      inputs: [],
-      name: "latestRoundData",
-      outputs: [
-        { internalType: "uint80", name: "roundId", type: "uint80" },
-        { internalType: "int256", name: "answer", type: "int256" },
-        { internalType: "uint256", name: "startedAt", type: "uint256" },
-        { internalType: "uint256", name: "updatedAt", type: "uint256" },
-        { internalType: "uint80", name: "answeredInRound", type: "uint80" },
-      ],
-      stateMutability: "view",
-      type: "function",
-    },
-  ];
+      if (!MORALIS_API_KEY) {
+        console.error('err');
+        return;
+      }
+
+      // Moralis API 키를 초기화합니다.
+      await Moralis.start({ apiKey: MORALIS_API_KEY });
+
+      const address = "0xDC24316b9AE028F1497c275EB9192a3Ea0f67022"; // 사용할 주소
+      const chain = "0xa4b1"; // 사용할 체인의 ID
+
+      // Moralis.EvmApi.balance.getNativeBalance 함수를 사용하여 잔액을 가져옵니다.
+      const response = await Moralis.EvmApi.balance.getNativeBalance({
+        address,
+        chain
+      });
+
+      // BalanceResponse 타입을 사용하여 response의 타입을 정의합니다.
+      const balanceResponse: BalanceResponse = response.raw;
+
+      setBalance(balanceResponse.balance); // 잔액을 상태로 설정합니다.
+    } catch (error) {
+      console.error('잔액 정보를 가져오는 중 오류가 발생했습니다:', error);
+      setBalance('오류 발생'); // 오류 상태를 설정합니다.
+    }
+  };
 
   useEffect(() => {
-    const fetchUSDTPrice = async () => {
-      if (
-        typeof window !== "undefined" &&
-        typeof window.ethereum !== "undefined"
-      ) {
-        try {
-          await window.ethereum.request({ method: "eth_requestAccounts" });
-          const provider = new ethers.BrowserProvider(window.ethereum);
-          const signer = await provider.getSigner();
-          const contract = new ethers.Contract(
-            contractAddress,
-            contractABI,
-            signer
-          );
-
-          const data = await contract.latestRoundData();
-          const price = ethers.formatUnits(data.answer, 8); // Chainlink uses 8 decimals for USD price feeds
-          setUsdtPrice(price);
-        } catch (error) {
-          console.error("Error fetching USDT price:", error);
-        }
-      } else {
-        console.log("Please install MetaMask!");
-      }
-    };
-
-    fetchUSDTPrice();
+    fetchBalance();
   }, []);
 
   return (
     <div>
-      <h1>USDT Price</h1>
-      {usdtPrice ? (
-        <p>Current USDT Price: ${parseFloat(usdtPrice).toFixed(2)}</p>
-      ) : (
-        <p>Loading USDT Price...</p>
-      )}
+      {balance ? <p>잔액: {balance}</p> : <p>잔액 정보를 불러오는 중...</p>}
     </div>
   );
 };

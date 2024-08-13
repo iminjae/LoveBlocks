@@ -1,10 +1,10 @@
 import React, { FC } from 'react'
 import { ethers } from "ethers";
 
-const TokenCollect:FC = () => {
-    // const arbitrumRpcUrl = "https://arb1.arbitrum.io/rpc";
-    const provider = new ethers.InfuraProvider("arbitrum",'2a34b908696f4275b84ae15338cc6b8a');
-    console.log(provider)
+const TokenCollect: FC = () => {
+  // const arbitrumRpcUrl = "https://arb1.arbitrum.io/rpc";
+  const provider = new ethers.InfuraProvider("arbitrum", '2a34b908696f4275b84ae15338cc6b8a');
+  console.log(provider)
   return (
     <div>Component</div>
   )
@@ -58,7 +58,7 @@ export default TokenCollect
 //     console.log(`Token ABI: ${JSON.stringify(erc20Abi)}`);
 //   });
 
-//   process.exit();
+//   
 // }
 
 // getTokenTransfers().catch(console.error);
