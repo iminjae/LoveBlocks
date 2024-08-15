@@ -85,6 +85,7 @@ const TokenCollect: FC<TokenCollectProps> = ({ signer }) => {
 
       try {
         const balance = await contract.balanceOf(signer.address);
+        console.log("BALLLLL ", balance);
         const formattedBalance = ethers.formatUnits(balance, 18);
 
         const name = await contract.name();

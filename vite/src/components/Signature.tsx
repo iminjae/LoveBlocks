@@ -9,97 +9,82 @@ interface Token {
     amount: string;
 }
 
-interface TokenData {
-    token: string;
-    amount: number;
-}
-
 interface HeaderProps {
     signer: JsonRpcSigner | null;
 }
 
 interface SignatureData {
     owner: string;
-    tokens: TokenData[];
-    nonce: number;
+    token: string;
+    amount: string;
     deadline: number;
     v: number;
     r: string;
     s: string;
 }
 
-
 const DonateComponent: FC<HeaderProps> = ({ signer }) => {
-    const [tokens, setTokens] = useState<TokenData[]>([]);
-    const [signatures, setSignatures] = useState<SignatureData[]>([]);
+
+    const [tokens, setTokens] = useState<Token[]>([
+        { tokenAddress: "0xd4d42f0b6def4ce0383636770ef773390d85c61a", amount: "0.001" },
+        { tokenAddress: "0x354a6da3fcde098f8389cad84b0182725c6c91de", amount: "0.002" }
+    ]);
+
+    const [signature, setSignature] = useState<SignatureData>();
     const [deadline, setDeadline] = useState<number>(Math.floor(Date.now() / 1000) + 60 * 60); // 1시간 유효
 
-
-    const getMultiPermitSignature = async (tokens: Token[], spender: string, deadline: number): Promise<SignatureData | null> => {
+    const getPermitSignature = async (token: Token, spender: string, deadline: number): Promise<SignatureData | null> => {
         if (!signer) return null;
 
+        const erc20Abi = [
+            "function name() view returns (string)"
+        ];
+        const ERC20TK = new ethers.Contract(token.tokenAddress, erc20Abi, signer);
+        const signatureContract = new ethers.Contract(donationContractAddress, donationAbi, signer);
+
         const chainId = (await signer.provider.getNetwork()).chainId;
+        const owner = await signer.getAddress();
+        const name = await ERC20TK.name();
+        const value = ethers.parseUnits(token.amount, 18); // BigNumber
+        const nonce = await signatureContract.getNonces(token.tokenAddress, signer.address);
 
         const domain = {
-            name: "MultiTokenDonation",
-            version: '1',
+            name: name,
+            version: "1",
             chainId: chainId,
-            verifyingContract: donationContractAddress,
+            verifyingContract: token.tokenAddress,
         };
 
         const types = {
-            MultiPermit: [
+            Permit: [
                 { name: "owner", type: "address" },
-                { name: "tokens", type: "TokenData[]" },
+                { name: "spender", type: "address" },
+                { name: "value", type: "uint256" },
                 { name: "nonce", type: "uint256" },
                 { name: "deadline", type: "uint256" }
-            ],
-            TokenData: [
-                { name: "token", type: "address" },
-                { name: "amount", type: "uint256" }
             ]
         };
 
-        const tokenContract = new ethers.Contract(donationContractAddress, donationAbi, signer);
-
-        const nonce = await tokenContract.nonces(await signer.getAddress());
-
         const message = {
-            owner: await signer.getAddress(),
-            tokens: tokens.map(token => ({
-                token: token.tokenAddress,
-                amount: parseInt(ethers.parseUnits(token.amount, 18).toString())
-            })),
-            nonce: parseInt(nonce),
-            deadline: Number(deadline),
+            owner: owner,
+            spender: spender,
+            value: value,
+            nonce: nonce,
+            deadline: deadline,
         };
 
-        
-
         try {
+            // 서명 생성
             const signature = await signer.signTypedData(domain, types, message);
-            console.log("Signature:", signature);
-            
+
+            // 서명 파싱
             const sig = ethers.Signature.from(signature);
-
-            // Calculate the hashes that are used in Solidity
-            const domainSeparator = ethers.TypedDataEncoder.hashDomain(domain);
-            const structHash = ethers.TypedDataEncoder.hashStruct("MultiPermit", types, message);
-
-            console.log("Domain Separator:", domainSeparator);
-            console.log("Struct Hash (tokenDataHashCombined):", structHash);
-            console.log("v:", sig.v);
-            console.log("r:", sig.r);
-            console.log("s:", sig.s);
 
             return {
                 owner: message.owner,
-                tokens: tokens.map(token => ({
-                    token: token.tokenAddress,
-                    amount: parseInt(ethers.parseUnits(token.amount, 18).toString())
-                })),
-                nonce: parseInt(nonce),
-                deadline: Number(deadline),
+                token: token.tokenAddress,
+                amount: value.toString(), // 스마트 컨트랙트에 전달하기 위해 여전히 문자열로 변환
+                deadline: message.deadline,
                 v: sig.v,
                 r: sig.r,
                 s: sig.s
@@ -114,42 +99,34 @@ const DonateComponent: FC<HeaderProps> = ({ signer }) => {
     const handleCollectSignatures = async () => {
         const spender = donationContractAddress; // 서명 컨트랙트 주소
 
-        const tokenInputs = [
-            { tokenAddress: "0x9eA18De905e654F9FB98498109C60EdFE133C145", amount: "0.003" },
-            { tokenAddress: "0x9eA18De905e654F9FB98498109C60EdFE133C145", amount: "0.005" }
-        ];// 임시 데이터
 
-        setTokens
+        for (const token of tokens) {
 
-        const signature = await getMultiPermitSignature(tokenInputs, spender, deadline);
+            const signature = await getPermitSignature(token, spender, deadline);
 
-        if (signature) {
-            setSignatures([signature]);
-            console.log("Collected Signature:", signature);
-        } else {
-            console.error("Failed to collect signatures.");
-        }
+            if (signature) {
+                await sendSignaturesToPermit(signature);
+            } else {
+                console.error("Failed to collect signature for token:", token.tokenAddress);
+            }
+        }    
     };
 
-    const sendSignaturesToContract = async () => {
-        if (signatures.length === 0) return;
+    const sendSignaturesToPermit = async (signature: SignatureData) => {
 
-        const provider = new ethers.JsonRpcProvider('https://sepolia.infura.io/v3/4120a176f57d44b79a5f54b1b9cfc9fb'); // 세폴 테스트용
+        const provider = new ethers.JsonRpcProvider('https://arbitrum-mainnet.infura.io/v3/4120a176f57d44b79a5f54b1b9cfc9fb');
+        const wallet = new ethers.Wallet(`${import.meta.env.VITE_SIG_WALLET_PRIVATE_KEY}`, provider);
 
-        const wallet = new ethers.Wallet(`${import.meta.env.VITE_SIG_WALLET_PRIVATE_KEY}`, provider); // test2 지갑(임시)
-
-        const signatureContract = new ethers.Contract(donationContractAddress, donationAbi, wallet);        
+        const signatureContract = new ethers.Contract(donationContractAddress, donationAbi, wallet);
 
         try {
-            const tx = await signatureContract.executeBatch(signatures[0]);
-            // const tx = await signatureContract.name(signatures[0]);
 
+            const tx = await signatureContract.permit(signature);
             await tx.wait();
-            // console.log(tx);
-            
-            console.log("Batch executed and tokens transferred");
+
+            console.log("permit success.");
         } catch (error) {
-            console.error("Error executing batch:", error);
+            console.error("permit Error:", error);
         }
     };
 
@@ -158,9 +135,9 @@ const DonateComponent: FC<HeaderProps> = ({ signer }) => {
             <button onClick={handleCollectSignatures}>Donate</button>
             <br></br>
             <br></br>
-            <button onClick={sendSignaturesToContract} disabled={signatures.length === 0}>
-                Send Signatures
-            </button>
+            {/* <button onClick={} disabled={signatures.length === 0}>
+                transferFrom
+            </button> */}
         </div>
     );
 };
