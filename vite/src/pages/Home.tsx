@@ -126,7 +126,6 @@ const Home: FC = () => {
 
   return (
     <div className="bg-red-200">
-      HOME 민재 수정
       <button onClick={() => navigate("/donation", { state: { holdTokens } })}>
         기부하러 가기
       </button>
