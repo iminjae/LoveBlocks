@@ -1,1 +1,1 @@
-export const donationContractAddress = "0x50EbABF9A629aE0BEB3a4c5Ad54FF8020A862adA"; //기부 컨트랙트 주소
+export const donationContractAddress = "0x0161807e16060fDcfa4d2716cEE91174DC43eF10"; //기부 컨트랙트 주소

@@ -3,150 +3,83 @@ pragma solidity >=0.8.2 <0.9.0;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-interface IERC20Permit {
+interface IERC20Permit {/* 서명 permit interface*/
+
     function permit(
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
+        address owner,      //토큰소유자
+        address spender,    //승인할계정
+        uint256 value,      //토큰량
+        uint256 deadline,   //서명유효기간
+        uint8 v,            
         bytes32 r,
         bytes32 s
     ) external;
 
-    function transferFrom(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) external returns (bool);
+    function nonces(address owner) external view returns (uint256);//서명자 논스값(중복방지)
+}
+
+interface IERC20 {
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
 }
 
 contract Donation {
-    struct TokenData {
-        address token;
-        uint256 amount;
-    }
 
+    /* 기부 서명 받을때 데이터 */
     struct SignatureData {
-        address owner;
-        TokenData[] tokens;
-        uint256 nonce;
-        uint256 deadline;
+        address owner;      //토큰소유자
+        address token;      //토큰주소
+        uint256 amount;     //토큰량
+        uint256 deadline;   //서명유효기간
+
+        /* v,r,s 는 서명값임 */
         uint8 v;
         bytes32 r;
         bytes32 s;
     }
 
-    struct MultiPermit {
-        address owner;
-        TokenData[] tokens;
-        uint256 nonce;
-        uint256 deadline;
-    }
+    //서명 받은거 permit처리 (approve)
+    function permit(SignatureData calldata signature) external {
+       
+        IERC20Permit tokenPermit = IERC20Permit(signature.token);
 
-    mapping(address => uint256) public nonces;
-    bytes32 public DOMAIN_SEPARATOR;
-    bytes32 public constant TOKEN_DATA_TYPEHASH = keccak256("TokenData(address token,uint256 amount)");
-    // bytes32 public constant MULTIPERMIT_TYPEHASH = keccak256("MultiPermit(address owner,TokenData[] tokens,uint256 nonce,uint256 deadline)");
-    bytes32 public constant MULTIPERMIT_TYPEHASH = keccak256("MultiPermit(address owner,TokenData[] tokens,uint256 nonce,uint256 deadline)TokenData(address token,uint256 amount)");
-    
-    constructor() {
-        DOMAIN_SEPARATOR = keccak256(abi.encode(
-            keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-            keccak256(bytes("MultiTokenDonation")),  // Domain Name
-            keccak256(bytes("1")),                   // Version
-            block.chainid,                           // Chain ID
-            address(this)                            // Contract address
-        ));
-    }
-
-    function name(SignatureData calldata signature) public pure returns(SignatureData memory){
-        return signature;
-    }
-
-    function executeBatch(SignatureData calldata signature) external {
-        require(signature.deadline >= block.timestamp, "Signature expired");
-
-        // 여러 개의 토큰 데이터를 해시화하여 하나의 해시로 결합
-        bytes32[] memory tokenDataHashes = new bytes32[](signature.tokens.length);
-        for (uint256 i = 0; i < signature.tokens.length; i++) {
-            tokenDataHashes[i] = keccak256(abi.encode(
-                TOKEN_DATA_TYPEHASH,
-                signature.tokens[i].token,
-                signature.tokens[i].amount
-            ));
-        }
-
-        // 모든 토큰 해시를 결합한 최종 토큰 데이터 해시 생성
-        bytes32 tokenDataHashCombined = keccak256(abi.encodePacked(tokenDataHashes));
-
-        // 최종 structHash 생성
-        bytes32 structHash = keccak256(abi.encode(
-            MULTIPERMIT_TYPEHASH,
+        tokenPermit.permit(
             signature.owner,
-            tokenDataHashCombined,
-            signature.nonce,
-            signature.deadline
-        ));
+            address(this),
+            signature.amount,
+            signature.deadline,
+            signature.v,
+            signature.r,
+            signature.s
+        );
+    }
 
-        bytes32 hash = keccak256(abi.encodePacked(
-            "\x19\x01",
-            DOMAIN_SEPARATOR,
-            structHash
-        ));
+    function transferFrom(SignatureData[] memory signature) external {
 
+        require(signature.length > 0, "no signature data.");
 
-        
+        for(uint i = 0; i < signature.length; i++){
 
-        address signer = ecrecover(hash, signature.v, signature.r, signature.s);
+            IERC20 token = IERC20(signature[i].token);
 
-        // if (signer != signature.owner) {
-        //     revert(string(abi.encodePacked(
-        //         "Invalid signature. Recovered: ",
-        //         Strings.toHexString(uint160(signer), 20),
-        //         ", Expected: ",
-        //         Strings.toHexString(uint160(signature.owner), 20),
-        //         ", v: ", Strings.toString(signature.v),
-        //         ", r: ", Strings.toHexString(uint256(signature.r)),
-        //         ", s: ", Strings.toHexString(uint256(signature.s)),
-        //         ", MULTIPERMIT_TYPEHASH: ", Strings.toHexString(uint256(MULTIPERMIT_TYPEHASH)),
-        //         ", tokenDataHashCombined: ", Strings.toHexString(uint256(structHash)),
-        //         ", nonce: ", Strings.toHexString(uint256(signature.nonce)),
-        //         ", deadline: ", Strings.toHexString(uint256(signature.deadline)),
-        //         ", DOMAIN_SEPARATOR: ", Strings.toHexString(uint256(DOMAIN_SEPARATOR))
-        //     )));
-        // }
-
-        require(signer == signature.owner, "Invalid signature");
-        require(nonces[signature.owner] == signature.nonce, "Invalid nonce");
-        nonces[signature.owner]++;
-        
-
-        for (uint256 i = 0; i < signature.tokens.length; i++) {
-            IERC20Permit token = IERC20Permit(signature.tokens[i].token);
-
-            try token.permit(
-                signature.owner,
-                address(this),
-                signature.tokens[i].amount,
-                signature.deadline,
-                signature.v,
-                signature.r,
-                signature.s
-            ) {
-                require(
-                    token.transferFrom(
-                        signature.owner,
-                        address(this),
-                        signature.tokens[i].amount
-                    ),
-                    "Transfer failed"
-                );
-            } catch Error(string memory reason) {
-
-                revert(string(abi.encodePacked("Permit failed: ", reason)));
-            } 
-        
+            require(
+                token.transferFrom(
+                    signature[i].owner,
+                    address(this),
+                    signature[i].amount
+                ),
+                "Transfer failed"
+            );
         }
+    }
+
+    //받은 토큰 조회
+    function getContractTokenBalance(address token)public view returns (uint256) {
+        return IERC20(token).balanceOf(address(this));
+    }
+
+     // 소유자의 논스 값을 조회
+    function getNonces(address token, address owner) public view returns (uint256) {
+        return IERC20Permit(token).nonces(owner);
     }
 }
