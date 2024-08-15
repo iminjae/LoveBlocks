@@ -12,7 +12,7 @@ const MinjaePage: FC = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <Signature signer={signer} />
+
     </div>
   );
 };
