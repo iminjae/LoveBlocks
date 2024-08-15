@@ -29,7 +29,7 @@ const DonateComponent: FC<HeaderProps> = ({ signer }) => {
         { tokenAddress: "0xd4d42f0b6def4ce0383636770ef773390d85c61a", amount: "0.001" },
         { tokenAddress: "0x354a6da3fcde098f8389cad84b0182725c6c91de", amount: "0.002" }
     ]);
-
+    
     const [signature, setSignature] = useState<SignatureData>();
     const [deadline, setDeadline] = useState<number>(Math.floor(Date.now() / 1000) + 60 * 60); // 1시간 유효
 
@@ -99,7 +99,6 @@ const DonateComponent: FC<HeaderProps> = ({ signer }) => {
     const handleCollectSignatures = async () => {
         const spender = donationContractAddress; // 서명 컨트랙트 주소
 
-
         for (const token of tokens) {
 
             const signature = await getPermitSignature(token, spender, deadline);
@@ -123,8 +122,6 @@ const DonateComponent: FC<HeaderProps> = ({ signer }) => {
 
             const tx = await signatureContract.permit(signature);
             await tx.wait();
-
-            console.log("permit success.");
         } catch (error) {
             console.error("permit Error:", error);
         }
