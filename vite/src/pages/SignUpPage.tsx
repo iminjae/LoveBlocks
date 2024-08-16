@@ -1,22 +1,22 @@
-import { FC, useEffect } from "react";
+import { FC } from "react";
 import TokenCollect from "../components/TokenCollect";
 import { useOutletContext } from "react-router-dom";
 import { OutletContext } from "../components/Layout";
+import CreateMultiSig from "../components/CreateMultiSig";
 
 
-const HyunyongPage: FC = () => {
+const SignUpPage: FC = () => {
   const { signer } = useOutletContext<OutletContext>();
 
   return (
     <>
       {signer && (
         <div>
-          토큰수집 해보자
-          <TokenCollect signer={signer}></TokenCollect>
+          <CreateMultiSig signer={signer}></CreateMultiSig>
         </div>
       )}
     </>
   );
 };
 
-export default HyunyongPage;
+export default SignUpPage;
