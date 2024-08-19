@@ -124,8 +124,8 @@ const DonateNFT: FC<HeaderProps> = ({ signer, holdTokens }) => {
 
             const jsonIPFS = await pinJsonToIPFS(imgIPFS);
 
-            console.log(signer);
-            console.log(jsonIPFS);
+            const jsonData = await fetchJsonFromIPFS(jsonIPFS);
+
 
             const response = await mintNftContract.mintNft("https://rose-top-beetle-859.mypinata.cloud/ipfs/" + jsonIPFS);
             await response.wait();
@@ -195,7 +195,7 @@ const DonateNFT: FC<HeaderProps> = ({ signer, holdTokens }) => {
             organization: "러브블록"
         }
 
-        const deungsimJson = {
+        const jsonData = {
 
             image: "https://gateway.pinata.cloud/ipfs/" + imgIPFS,
             attributes: [
@@ -223,7 +223,7 @@ const DonateNFT: FC<HeaderProps> = ({ signer, holdTokens }) => {
                     'pinata_api_key': apiKey,
                     'pinata_secret_api_key': secretApiKey,
                 },
-                body: JSON.stringify(deungsimJson),
+                body: JSON.stringify(jsonData),
             });
 
             if (!response.ok) {
@@ -241,6 +241,24 @@ const DonateNFT: FC<HeaderProps> = ({ signer, holdTokens }) => {
         }
 
     };
+
+    const fetchJsonFromIPFS = async (ipfsHash: string) => {
+        try {
+            const response = await fetch(`https://gateway.pinata.cloud/ipfs/${ipfsHash}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch JSON from IPFS');
+            }
+            const data = await response.json();
+            console.log(data);
+            return data;
+        } catch (error) {
+            console.error('Error fetching JSON from IPFS:', error);
+            return null;
+        }
+    };
+
+    
+    
 
 
     return (

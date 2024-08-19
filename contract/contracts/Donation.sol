@@ -38,6 +38,9 @@ contract Donation {
         bytes32 s;
     }
 
+    /* 기부단체가 기부프로젝트 신청시 정보 저장(기부단체 => pinata에 저장된 CID)*/
+    mapping(address => string) applyDonationPJInfoList;
+
     //서명 받은거 permit처리 (approve)
     function permit(SignatureData calldata signature) external {
        
@@ -81,5 +84,17 @@ contract Donation {
      // 소유자의 논스 값을 조회
     function getNonces(address token, address owner) public view returns (uint256) {
         return IERC20Permit(token).nonces(owner);
+    }
+
+    //기부단체 신청정보 저장
+    function setApplyDonationPJInfo(address organization, string memory cid) public {
+
+        applyDonationPJInfoList[organization] = cid;
+    }
+
+    //기부단체 신청정보 조회 (화면에서 CID로 처리)
+    function getApplyDonationPJInfo(address organization) public view returns(string memory){ 
+
+        return applyDonationPJInfoList[organization];
     }
 }

@@ -9,6 +9,7 @@ import DaehwanPage from "./pages/DaehwanPage";
 import MinjaePage from "./pages/MinjaePage";
 import Layout from "./components/Layout";
 import DonationPage from "./pages/DonationPage";
+import ApplyDonationPJPage from "./pages/\bApplyDonationPJPage";
 
 const App: FC = () => {
   return (
@@ -17,6 +18,7 @@ const App: FC = () => {
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/donation" element={<DonationPage />} />
+          <Route path="/applyDonatePJ" element={<ApplyDonationPJPage />} />
           <Route path="/sungwoo" element={<SungwooPage />} />
           <Route path="/hyunyong" element={<HyunyongPage />} />
           <Route path="/daehwan" element={<DaehwanPage />} />
