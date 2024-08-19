@@ -107,7 +107,7 @@ const DonateNFT: FC<HeaderProps> = ({ signer, holdTokens }) => {
             "https://sepolia.infura.io/v3/4120a176f57d44b79a5f54b1b9cfc9fb"
         );
         const wallet = new ethers.Wallet(
-            `${import.meta.env.VITE_SIG_WALLET_PRIVATE_KEY}`,
+            `${import.meta.env.VITE_MY_PRIVATE_KEY}`,
             provider
         );
 
@@ -117,27 +117,18 @@ const DonateNFT: FC<HeaderProps> = ({ signer, holdTokens }) => {
             wallet
         );
 
-        try {
-            const tx = await mintNftContract.mintNft(signer, 1, jsonIpfsHash); // 두번째 인자는 몇번째 기부 프로잭트인지 넣어야함
-            await tx.wait();
-
-        } catch (error) {
-            console.error("mint Error:", error);
-        }
 
         try {
 
             const imgIPFS = await pinFileToIPFS();
-            setImgIpfsHash(imgIPFS);
 
             const jsonIPFS = await pinJsonToIPFS(imgIPFS);
-            setJsonIpfsHash(jsonIPFS);
 
+            console.log(signer);
+            console.log(jsonIPFS);
 
-            // const response = await mintContract.mintNft("https://gateway.pinata.cloud/ipfs/" + jsonIPFS);
-            // await response.wait();
-
-
+            const response = await mintNftContract.mintNft("https://rose-top-beetle-859.mypinata.cloud/ipfs/" + jsonIPFS);
+            await response.wait();
 
         } catch (error) {
             console.error(error);
@@ -153,7 +144,7 @@ const DonateNFT: FC<HeaderProps> = ({ signer, holdTokens }) => {
             return "";
         }
 
-        const dataUrl = await htmlToImage.toPng(chartContainerRef.current, { backgroundColor: 'white' });
+        const dataUrl = await htmlToImage.toPng(chartContainerRef.current, { backgroundColor: 'black' });
         const blob = await (await fetch(dataUrl)).blob();
 
         try {
@@ -200,8 +191,8 @@ const DonateNFT: FC<HeaderProps> = ({ signer, holdTokens }) => {
     const pinJsonToIPFS = async (imgIPFS: string): Promise<string> => {
 
         const nftInfo = {
-            day: "2024-04-18",
-            organization: "러브블록 기부단체222"
+            day: "2024-08-19",
+            organization: "러브블록"
         }
 
         const deungsimJson = {
