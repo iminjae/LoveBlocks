@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { OutletContext } from '../components/Layout';
 import { useOutletContext } from 'react-router-dom';
-import Signature from '../components/SignatureButton';
+import ClovaOCR from '../components/ClovaOCR';
 
 
 
@@ -12,7 +12,7 @@ const MinjaePage: FC = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-
+        <ClovaOCR />
     </div>
   );
 };
