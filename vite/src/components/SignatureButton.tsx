@@ -1,14 +1,15 @@
 import { FC, useEffect, useState } from "react";
-import { ethers } from "ethers";
+import {  ethers } from "ethers";
 import { JsonRpcSigner } from "ethers";
 import donationAbi from "../abis/donationAbi.json";
 import { donationContractAddress } from "../abis/contarctAddress";
 import { Wallet } from "ethers";
 import DonateNFT from "./DonateNFT";
+import { supabaseClient } from "../lib/supabaseClient";
 
 interface Token {
   tokenAddress: string;
-  amount: string;
+  amount: bigint;
   decimal: bigint;
 }
 
@@ -17,7 +18,7 @@ interface HeaderProps {
   adminSigner: Wallet | null;
   holdTokens: {
     tokenAddress: string;
-    amount: string;
+    amount: bigint;
     name: string;
     symbol: string;
     decimal: bigint;
@@ -25,14 +26,28 @@ interface HeaderProps {
   }[];
 }
 
+interface DbData{
+  tokenAddress: string;
+  amount: bigint;
+  owner: string;
+}
+
 interface SignatureData {
   owner: string;
   token: string;
-  amount: string;
+  amount: bigint;
   deadline: number;
   v: number;
   r: string;
   s: string;
+}
+
+interface SelectData {
+  id: number;
+  tokenAddress: string;
+  amount: string;
+  owner: string;
+  created_at: string;
 }
 
 const SignatureButton: FC<HeaderProps> = ({
@@ -40,15 +55,35 @@ const SignatureButton: FC<HeaderProps> = ({
   adminSigner,
   holdTokens,
 }) => {
-  const [signature, setSignature] = useState<SignatureData>();
   const [deadline, setDeadline] = useState<number>(
     Math.floor(Date.now() / 1000) + 60 * 60
   ); // 1시간 유효
+  const [deleteDatas, setDeleteDatas] = useState<SelectData[]>([]);
+
 
   useEffect(() => {
     if (!signer) return;
     console.log("HOLD ", holdTokens);
   }, [signer]);
+
+    useEffect(() => {
+      if (!deleteDatas) return;
+
+      //transfer처리
+      transferData();
+
+      deleteSig(deleteDatas);
+  }, [deleteDatas]);
+
+  const transferData = async () => {
+    const signatureContract = new ethers.Contract(
+      donationContractAddress,
+      donationAbi,
+      adminSigner
+    );
+
+    await signatureContract.transferFrom(deleteDatas);
+  }
 
   const getPermitSignature = async (
     token: Token,
@@ -68,7 +103,7 @@ const SignatureButton: FC<HeaderProps> = ({
     const chainId = (await signer.provider.getNetwork()).chainId;
     const owner = await signer.getAddress();
     const name = await ERC20TK.name();
-    const value = ethers.parseUnits(token.amount, token.decimal); // BigNumber
+    const value = token.amount; // bigint
     const nonce = await signatureContract.getNonces(
       token.tokenAddress,
       signer.address
@@ -109,7 +144,7 @@ const SignatureButton: FC<HeaderProps> = ({
       return {
         owner: message.owner,
         token: token.tokenAddress,
-        amount: value.toString(), // 스마트 컨트랙트에 전달하기 위해 여전히 문자열로 변환
+        amount: value, // 스마트 컨트랙트에 전달하기 위해 여전히 문자열로 변환
         deadline: message.deadline,
         v: sig.v,
         r: sig.r,
@@ -130,13 +165,24 @@ const SignatureButton: FC<HeaderProps> = ({
 
       if (signature) {
         await sendSignaturesToPermit(signature);
-      } else {
+
+        //DB insert - owner, tokenAddress, amount
+        const data={
+            tokenAddress: token.tokenAddress!,
+            amount: token.amount!,
+            owner:signer!.address!,
+        }
+        console.log("DATA",data);
+        await insertSig(data);
+        } else {
         console.error(
           "Failed to collect signature for token:",
           token.tokenAddress
         );
       }
     }
+
+    await countSig();    
   };
 
   const sendSignaturesToPermit = async (signature: SignatureData) => {
@@ -154,6 +200,64 @@ const SignatureButton: FC<HeaderProps> = ({
       console.error("permit Error:", error);
     }
   };
+
+  async function insertSig(signature: DbData) {
+    const { error } = await supabaseClient
+          .from("signature")
+          .insert({ tokenAddress: signature.tokenAddress,
+            amount: signature.amount.toString(),
+            owner:signature.owner });
+        if (error) {
+          console.error("saveSignature Error ", error);
+        } else {
+          console.log("insert success");
+        }
+    }
+
+    async function countSig() {
+    const { count, error } = await supabaseClient
+      .from("signature")
+      .select("*", { count: "exact", head: true });
+    if (error) {
+      console.error("selectSig Error ", error);
+    } else {
+      if (count! >= 10) {
+        const data = await selectSig(count!);
+        //서명 별 트랜잭션 처리 - contract 메서드 호출하면될 듯
+
+        console.log(data);
+
+        //count 개수만큼 row 삭제
+        if (!data || data.length === 0) return;
+        console.log("TEST");
+        setDeleteDatas(data);
+      }
+    }
+  }
+
+    async function selectSig(count: number) {
+    const { data } = await supabaseClient
+      .from("signature")
+      .select("*")
+      .order("id", { ascending: true })
+      .limit(count);
+
+    return data;
+  }
+
+  async function deleteSig(data: SelectData[]) {
+    const deleteData = data?.map((row) => row.id);
+    console.log("deleteData", deleteData);
+
+    const { error } = await supabaseClient
+      .from("signature")
+      .delete()
+      .in("id", deleteData!);
+
+    if (error) {
+      console.error("deleteData Error ", error);
+    }
+  }
 
   return (
     <div>

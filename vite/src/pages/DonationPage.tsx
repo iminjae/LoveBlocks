@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC } from "react";
 import { useLocation, useOutletContext } from "react-router-dom";
 import SignatureButton from "../components/SignatureButton";
 import { OutletContext } from "../components/Layout";
@@ -6,7 +6,7 @@ import ProgressDonate from "../components/ProgressDonate";
 
 interface HoldToken {
   tokenAddress: string;
-  amount: string;
+  amount: bigint;
   name: string;
   symbol: string;
   decimal: bigint;
@@ -29,7 +29,7 @@ const DonationPage: FC = () => {
           <span>
             {token.name} ({token.symbol})
           </span>
-          <span>: {token.amount}</span>
+          <span>: {token.amount.toString()}</span>
           <div>: {token.tokenAddress}</div>
         </li>
       ))}
