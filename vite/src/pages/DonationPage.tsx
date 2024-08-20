@@ -3,6 +3,7 @@ import { useLocation, useOutletContext } from "react-router-dom";
 import SignatureButton from "../components/SignatureButton";
 import { OutletContext } from "../components/Layout";
 import ProgressDonate from "../components/ProgressDonate";
+import DonateNFT from "../components/DonateNFT";
 
 interface HoldToken {
   tokenAddress: string;
@@ -38,7 +39,9 @@ const DonationPage: FC = () => {
         holdTokens={holdTokens}
         adminSigner={adminSigner}
       ></SignatureButton>
+      <DonateNFT signer={signer} holdTokens={holdTokens}/>
     </div>
+    
   );
 };
 
