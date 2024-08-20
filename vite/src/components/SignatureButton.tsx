@@ -3,7 +3,7 @@
   import { JsonRpcSigner } from "ethers";
   import donationAbi from "../abis/donationAbi.json";
   import { donationContractAddress } from "../abis/contarctAddress";
-import DonateNFT from "./DonateNFT";
+  import DonateNFT from "./DonateNFT";
 
 
   interface Token {
