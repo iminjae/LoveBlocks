@@ -2,7 +2,7 @@ import React, { FC, useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { OutletContext } from "../components/Layout";
 import axios from "axios";
-import { ethers } from "ethers";
+import {  ethers } from "ethers";
 import ClovaOCR from "../components/ClovaOCR";
 
 interface TokenCoinGecko {
@@ -15,7 +15,7 @@ interface TokenCoinGecko {
 }
 interface HoldToken {
   tokenAddress: string;
-  amount: string;
+  amount: bigint;
   name: string;
   symbol: string;
   decimal: bigint;
@@ -84,7 +84,8 @@ const Home: FC = () => {
         const symbol = await contract.symbol();
         const decimal = await contract.decimals();
 
-        const formattedBalance = ethers.formatUnits(balance, decimal);
+        const formattedBalance = balance;
+        // const formattedBalance = ethers.formatUnits(balance, decimal);
 
         if (Number(formattedBalance) > 0) {
           return {

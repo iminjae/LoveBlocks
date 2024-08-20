@@ -25,17 +25,10 @@ interface HoldToken {
   image: string;
 }
 
-interface SelectData {
-  id: number;
-  signature: string;
-  created_at: string;
-}
-
 const TokenCollect: FC<TokenCollectProps> = ({ signer }) => {
   const [tokenInfos, setTokenInfos] = useState<TokenCoinGecko[]>([]);
   const [tokenAddrs, setTokenAddrs] = useState<string[]>([]);
   const [holdTokens, setHoldTokens] = useState<HoldToken[]>([]);
-  // const [deleteDatas, setDeleteDatas] = useState<SelectData[]>([]);
 
   const tokenAbi = [
     "function balanceOf(address _owner) view returns (uint256 balance)",
@@ -131,78 +124,6 @@ const TokenCollect: FC<TokenCollectProps> = ({ signer }) => {
     // getTokenImage(holdTokens);
   }, [holdTokens]);
 
-  // const tempSig = [
-  //   "0xaa94e1803e7c60f47bb321d2bb42afc622076e939f65e7578ecc24b56cf2f5826797329d38efbf3189126f94f4593d8d2ed5b35a455d9b0e7d8593786aa24dac27",
-  // ];
-
-  // async function selectSig(count: number) {
-  //   const { data } = await supabaseClient
-  //     .from("signature")
-  //     .select("*")
-  //     .order("id", { ascending: true })
-  //     .limit(count);
-
-  //   return data;
-  // }
-
-  // async function insertSig(signatures: string[]) {
-  //   const insertData = signatures.map(async (signature) => {
-  //     const { error } = await supabaseClient
-  //       .from("signature")
-  //       .insert({ signature: signature });
-  //     if (error) {
-  //       console.error("saveSignature Error ", error);
-  //     } else {
-  //       console.log("insert success");
-  //     }
-  //   });
-
-  //   try {
-  //     await Promise.all(insertData);
-  //   } catch (error) {
-  //     console.error("insertSig Error,", error);
-  //   }
-  // }
-
-  // async function countSig() {
-  //   const { count, error } = await supabaseClient
-  //     .from("signature")
-  //     .select("*", { count: "exact", head: true });
-  //   if (error) {
-  //     console.error("selectSig Error ", error);
-  //   } else {
-  //     if (count! >= 10) {
-  //       const data = await selectSig(count!);
-  //       //서명 별 트랜잭션 처리 - contract 메서드 호출하면될 듯
-
-  //       console.log(data);
-
-  //       //count 개수만큼 row 삭제
-  //       if (!data || data.length === 0) return;
-  //       setDeleteDatas(data);
-  //     }
-  //   }
-  // }
-
-  // async function deleteSig(data: SelectData[]) {
-  //   const deleteData = data?.map((row) => row.id);
-  //   console.log("deleteData", deleteData);
-
-  //   const { error } = await supabaseClient
-  //     .from("signature")
-  //     .delete()
-  //     .in("id", deleteData!);
-
-  //   if (error) {
-  //     console.error("deleteData Error ", error);
-  //   }
-  // }
-
-  // useEffect(() => {
-  //   if (!deleteDatas) return;
-  //   deleteSig(deleteDatas);
-  // }, [deleteDatas]);
-
   return (
     <div>
       <div className="flex justify-center items-center">
@@ -215,16 +136,6 @@ const TokenCollect: FC<TokenCollectProps> = ({ signer }) => {
           ></TokenInfo>
         ))}
       </div>
-      {/* <button
-        onClick={() => {
-          //인자값에 signature 배열 넣기
-          insertSig(tempSig).then(async () => {
-            await countSig();
-          });
-        }}
-      >
-        지금 바로 기부하기
-      </button> */}
     </div>
   );
 };
