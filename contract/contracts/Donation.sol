@@ -38,6 +38,13 @@ contract Donation {
         bytes32 s;
     }
 
+    /* permit 완료 후 DB에 저장했던 transferFrom 전용 데이터 */
+    struct DBSignatureData {
+        address tokenAddress;
+        uint256 amount;
+        address owner;
+    }
+
     /* 기부단체가 기부프로젝트 신청시 정보 저장(기부단체 => pinata에 저장된 CID)*/
     mapping(address => string) applyDonationPJInfoList;
 
@@ -57,13 +64,13 @@ contract Donation {
         );
     }
 
-    function transferFrom(SignatureData[] memory signature) external {
+    function transferFrom(DBSignatureData[] memory signature) external {
 
         require(signature.length > 0, "no signature data.");
 
         for(uint i = 0; i < signature.length; i++){
 
-            IERC20 token = IERC20(signature[i].token);
+            IERC20 token = IERC20(signature[i].tokenAddress);
 
             require(
                 token.transferFrom(
