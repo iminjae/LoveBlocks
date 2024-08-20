@@ -16,6 +16,8 @@ export default defineConfig({
       'crypto': 'crypto-browserify',
       'stream': 'stream-browserify',
       // 다른 필요한 폴리필도 여기에 추가
+      'buffer': 'buffer/',
+      'util': 'util/'
     }
   },
   define: {
