@@ -4,6 +4,7 @@ import { JsonRpcSigner } from "ethers";
 import donationAbi from "../abis/donationAbi.json";
 import { donationContractAddress } from "../abis/contarctAddress";
 import { Wallet } from "ethers";
+import DonateNFT from "./DonateNFT";
 
 interface Token {
   tokenAddress: string;
@@ -65,18 +66,13 @@ const SignatureButton: FC<HeaderProps> = ({
     );
 
     const chainId = (await signer.provider.getNetwork()).chainId;
-    console.log("chainId", chainId);
     const owner = await signer.getAddress();
-    console.log("owner", owner);
     const name = await ERC20TK.name();
-    console.log("name", name);
     const value = ethers.parseUnits(token.amount, token.decimal); // BigNumber
-    console.log("value", value);
     const nonce = await signatureContract.getNonces(
       token.tokenAddress,
       signer.address
     );
-    console.log("nonce", nonce);
 
     const domain = {
       name: name,
@@ -104,8 +100,6 @@ const SignatureButton: FC<HeaderProps> = ({
     };
 
     try {
-      console.log("MESSAGE", message);
-      console.log("DOMAIN", domain);
       // 서명 생성
       const signature = await signer.signTypedData(domain, types, message);
 
@@ -156,7 +150,6 @@ const SignatureButton: FC<HeaderProps> = ({
       const tx = await signatureContract.permit(signature);
       await tx.wait();
 
-      console.log("permit success.");
     } catch (error) {
       console.error("permit Error:", error);
     }
@@ -167,9 +160,8 @@ const SignatureButton: FC<HeaderProps> = ({
       <button onClick={handleCollectSignatures}>Donate</button>
       <br></br>
       <br></br>
-      {/* <button onClick={} disabled={signatures.length === 0}>
-                transferFrom
-            </button> */}
+      <DonateNFT signer={signer} holdTokens={holdTokens}/>
+
     </div>
   );
 };

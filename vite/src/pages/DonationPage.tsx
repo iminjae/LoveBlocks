@@ -2,6 +2,7 @@ import { FC, useState } from "react";
 import { useLocation, useOutletContext } from "react-router-dom";
 import SignatureButton from "../components/SignatureButton";
 import { OutletContext } from "../components/Layout";
+import ProgressDonate from "../components/ProgressDonate";
 
 interface HoldToken {
   tokenAddress: string;
@@ -19,6 +20,9 @@ const DonationPage: FC = () => {
 
   return (
     <div>
+      <ProgressDonate signer={signer}/>
+      <br/>
+      <br/>
       {holdTokens.map((token: HoldToken, index: number) => (
         <li key={index}>
           <img src={token.image} alt={token.name} width="30" height="30" />
