@@ -93,7 +93,7 @@ const Header: FC<HeaderProps> = ({ signer, setSigner, setProvider }) => {
 
       <button onClick={() => navigate("/applyDonatePJ")}>기부 프로젝트 신청</button>
 
-      <button onClick={() => navigate("/hyunyong")}>현용</button>
+      <button onClick={() => navigate("/signup")}>현용</button>
 
       <button onClick={() => navigate("/sungwoo")}>성우</button>
 

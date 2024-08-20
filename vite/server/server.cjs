@@ -1,53 +1,53 @@
-const express = require('express');
-const axios = require('axios');
-const cors = require('cors');
-const multer = require('multer');
-const fs = require('fs');
+require("dotenv").config();
+const express = require("express");
+const axios = require("axios");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const multer = require("multer");
+const FormData = require("form-data"); // form-data 패키지 가져오기
 
 const app = express();
-const upload = multer({ dest: 'uploads/' });
 
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+const upload = multer();
 
-app.post('/api/ocr', upload.single('image'), async (req, res) => {
+const PORT = 5000;
+app.post("/proxy/clova-ocr", upload.single("file"), async (req, res) => {
+  console.log("REQ ", req.body);
+  console.log("FILE", req.file);
   try {
     const file = req.file;
-    
-    if (!file) {
-      return res.status(400).send('No image uploaded');
-    }
+    const message = req.body.message;
 
-    const imagePath = file.path;
-    const image = fs.readFileSync(imagePath); 
-    const encodedImage = Buffer.from(image).toString('base64'); 
-  
-    const response = await axios.post('https://ocr.apigw.ntruss.com/v1/receipt', {
-      images: [
-        {
-          format: 'jpg,jpeg', 
-          name: 'receipt',
-          data: encodedImage,
+    const formData = new FormData();
+    formData.append("file", file.buffer, file.originalname);
+    formData.append("message", message);
+
+    const response = await axios.post(
+      "https://xxgd8dxe4a.apigw.ntruss.com/custom/v1/33611/92da9789e83aabebffca1dc20aed02fe7c9806fcc16a771660ce385ab927c322/document/receipt",
+      formData,
+      {
+        headers: {
+          ...formData.getHeaders(),
+          "X-OCR-SECRET": "S2ZPa2VNbWtvbFBGU1B2WmxLc1hDVldLZlJsZ05vREE=",
         },
-      ],
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'X-OCR-SECRET': 'cHZmVlNMYVhsQ1lZT0NDUmJ6VlNCaGZoeXdwbWFHY1E=', 
-      },
+        timeout: 5000,
+      }
+    );
+
+    console.log(response.data);
+    res.json(response.data);
+  } catch (err) {
+    console.error("Error making request to Clova OCR API:", err);
+    res.status(err.response ? err.response.status : 500).json({
+      message: "Failed to process OCR",
+      error: err.message,
     });
-
-    fs.unlinkSync(imagePath); 
-
-    res.json(response.data); 
-  } catch (error) {
-    console.error('Error during OCR request:', error);
-    res.status(500).send('Server error');
   }
 });
 
-const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
