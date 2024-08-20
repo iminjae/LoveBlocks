@@ -13,7 +13,7 @@ interface HoldToken {
 }
 
 const DonationPage: FC = () => {
-  const { signer } = useOutletContext<OutletContext>();
+  const { signer, adminSigner } = useOutletContext<OutletContext>();
   const location = useLocation();
   const { holdTokens } = location.state || { holdTokens: [] };
 
@@ -32,6 +32,7 @@ const DonationPage: FC = () => {
       <SignatureButton
         signer={signer}
         holdTokens={holdTokens}
+        adminSigner={adminSigner}
       ></SignatureButton>
     </div>
   );

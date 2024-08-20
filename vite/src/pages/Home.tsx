@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from "react-router-dom";
 import { OutletContext } from "../components/Layout";
 import axios from "axios";
 import { ethers } from "ethers";
+import ClovaOCR from "../components/ClovaOCR";
 
 interface TokenCoinGecko {
   id: string;
@@ -129,6 +130,7 @@ const Home: FC = () => {
       <button onClick={() => navigate("/donation", { state: { holdTokens } })}>
         기부하러 가기
       </button>
+      <ClovaOCR></ClovaOCR>
     </div>
   );
 };

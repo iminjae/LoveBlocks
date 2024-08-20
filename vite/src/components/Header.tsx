@@ -89,7 +89,7 @@ const Header: FC<HeaderProps> = ({ signer, setSigner, setProvider }) => {
     <div className="container-style h-20 flex justify-between items-center p-10 bg-blue-200">
       <button onClick={() => navigate("/")}>Home</button>
 
-      <button onClick={() => navigate("/hyunyong")}>현용</button>
+      <button onClick={() => navigate("/signup")}>현용</button>
 
       <button onClick={() => navigate("/sungwoo")}>성우</button>
 
