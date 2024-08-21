@@ -50,13 +50,6 @@ const MinjaePage: FC = () => {
           </div>
         </section>
       </main>
-
-      {/* Footer */}
-      <footer className="bg-toss-dark text-white py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p>&copy; 2024 Toss. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 };

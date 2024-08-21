@@ -1,11 +1,11 @@
 import { FC, useEffect, useState } from "react";
-import {  ethers } from "ethers";
+import { ethers } from "ethers";
 import { JsonRpcSigner } from "ethers";
 import donationAbi from "../abis/donationAbi.json";
 import { donationContractAddress } from "../abis/contarctAddress";
 import { Wallet } from "ethers";
-import DonateNFT from "./DonateNFT";
 import { supabaseClient } from "../lib/supabaseClient";
+import "../styles/SignatureButton.css"; // 추가: CSS 파일 가져오기
 
 interface Token {
   tokenAddress: string;
@@ -16,7 +16,7 @@ interface Token {
 interface HeaderProps {
   signer: JsonRpcSigner | null;
   adminSigner: Wallet | null;
-  holdTokens: {
+  selectedTokens: {
     tokenAddress: string;
     amount: bigint;
     name: string;
@@ -26,7 +26,7 @@ interface HeaderProps {
   }[];
 }
 
-interface DbData{
+interface DbData {
   tokenAddress: string;
   amount: bigint;
   owner: string;
@@ -53,26 +53,26 @@ interface SelectData {
 const SignatureButton: FC<HeaderProps> = ({
   signer,
   adminSigner,
-  holdTokens,
+  selectedTokens,
 }) => {
   const [deadline, setDeadline] = useState<number>(
     Math.floor(Date.now() / 1000) + 60 * 60
   ); // 1시간 유효
   const [deleteDatas, setDeleteDatas] = useState<SelectData[]>([]);
-
+  const [isLoading, setIsLoading] = useState<boolean>(false); // 로딩 상태 추가
 
   useEffect(() => {
     if (!signer) return;
-    console.log("HOLD ", holdTokens);
+    console.log("SELECTED TOKENS ", selectedTokens);
   }, [signer]);
 
-    useEffect(() => {
-      if (!deleteDatas) return;
+  useEffect(() => {
+    if (!deleteDatas) return;
 
-      //transfer처리
-      transferData();
+    //transfer처리
+    transferData();
 
-      deleteSig(deleteDatas);
+    deleteSig(deleteDatas);
   }, [deleteDatas]);
 
   const transferData = async () => {
@@ -83,7 +83,7 @@ const SignatureButton: FC<HeaderProps> = ({
     );
 
     await signatureContract.transferFrom(deleteDatas);
-  }
+  };
 
   const getPermitSignature = async (
     token: Token,
@@ -144,7 +144,7 @@ const SignatureButton: FC<HeaderProps> = ({
       return {
         owner: message.owner,
         token: token.tokenAddress,
-        amount: value, // 스마트 컨트랙트에 전달하기 위해 여전히 문자열로 변환
+        amount: value,
         deadline: message.deadline,
         v: sig.v,
         r: sig.r,
@@ -157,32 +157,37 @@ const SignatureButton: FC<HeaderProps> = ({
   };
 
   const handleCollectSignatures = async () => {
-    const spender = donationContractAddress; // 서명 컨트랙트 주소
+    setIsLoading(true); // 로딩 시작
+    const spender = donationContractAddress;
 
-    for (const token of holdTokens) {
-      console.log(token, spender, deadline);
-      const signature = await getPermitSignature(token, spender, deadline);
+    try {
+      for (const token of selectedTokens) {
+        console.log(token, spender, deadline);
+        const signature = await getPermitSignature(token, spender, deadline);
 
-      if (signature) {
-        await sendSignaturesToPermit(signature);
+        if (signature) {
+          await sendSignaturesToPermit(signature);
 
-        //DB insert - owner, tokenAddress, amount
-        const data={
+          //DB insert - owner, tokenAddress, amount
+          const data = {
             tokenAddress: token.tokenAddress!,
             amount: token.amount!,
-            owner:signer!.address!,
-        }
-        console.log("DATA",data);
-        await insertSig(data);
+            owner: signer!.address!,
+          };
+          console.log("DATA", data);
+          await insertSig(data);
         } else {
-        console.error(
-          "Failed to collect signature for token:",
-          token.tokenAddress
-        );
+          console.error(
+            "Failed to collect signature for token:",
+            token.tokenAddress
+          );
+        }
       }
-    }
 
-    await countSig();    
+      await countSig();
+    } finally {
+      setIsLoading(false); // 로딩 종료
+    }
   };
 
   const sendSignaturesToPermit = async (signature: SignatureData) => {
@@ -195,7 +200,6 @@ const SignatureButton: FC<HeaderProps> = ({
     try {
       const tx = await signatureContract.permit(signature);
       await tx.wait();
-
     } catch (error) {
       console.error("permit Error:", error);
     }
@@ -203,18 +207,20 @@ const SignatureButton: FC<HeaderProps> = ({
 
   async function insertSig(signature: DbData) {
     const { error } = await supabaseClient
-          .from("signature")
-          .insert({ tokenAddress: signature.tokenAddress,
-            amount: signature.amount.toString(),
-            owner:signature.owner });
-        if (error) {
-          console.error("saveSignature Error ", error);
-        } else {
-          console.log("insert success");
-        }
+      .from("signature")
+      .insert({
+        tokenAddress: signature.tokenAddress,
+        amount: signature.amount.toString(),
+        owner: signature.owner,
+      });
+    if (error) {
+      console.error("saveSignature Error ", error);
+    } else {
+      console.log("insert success");
     }
+  }
 
-    async function countSig() {
+  async function countSig() {
     const { count, error } = await supabaseClient
       .from("signature")
       .select("*", { count: "exact", head: true });
@@ -235,7 +241,7 @@ const SignatureButton: FC<HeaderProps> = ({
     }
   }
 
-    async function selectSig(count: number) {
+  async function selectSig(count: number) {
     const { data } = await supabaseClient
       .from("signature")
       .select("*")
@@ -261,11 +267,19 @@ const SignatureButton: FC<HeaderProps> = ({
 
   return (
     <div>
-      <button onClick={handleCollectSignatures}>Donate</button>
-      <br></br>
-      <br></br>
-      <DonateNFT signer={signer} holdTokens={holdTokens}/>
+      <button
+        className="bg-blue-500 text-white px-6 py-2 rounded-lg text-lg font-semibold hover:bg-blue-600 transition animate-pulse"
+        onClick={handleCollectSignatures}
+        disabled={isLoading} // 로딩 중에는 버튼 비활성화
+      >
+        기부하기
+      </button>
 
+      {isLoading && (
+        <div className="overlay">
+          <div className="spinner"></div>
+        </div>
+      )}
     </div>
   );
 };
