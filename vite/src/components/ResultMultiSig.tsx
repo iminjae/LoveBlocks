@@ -1,30 +1,24 @@
 import { Contract } from "ethers";
 import { JsonRpcSigner } from "ethers";
-import { FC, useEffect, useState } from "react";
+import { Dispatch, FC, SetStateAction, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface ResultMultiSigProps {
   signer: JsonRpcSigner | null;
-  contract: Contract;
+  multiSigCA: Contract;
 }
 
-const ResultMultiSig: FC<ResultMultiSigProps> = ({ signer, contract }) => {
-  const [multiSigAddr, setMultiSigAddr] = useState<string>();
-  useEffect(() => {
-    if (!signer) return;
-    getMultiSigAddr();
-  }, [signer]);
+const ResultMultiSig: FC<ResultMultiSigProps> = ({ multiSigCA }) => {
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!multiSigAddr) return;
-    console.log("multiSigAddr ", multiSigAddr);
-  }, [multiSigAddr]);
-
-  const getMultiSigAddr = async () => {
-    const addr = await contract.instantiations(signer?.address, 0);
-    setMultiSigAddr(addr);
-  };
-
-  return <div>Multsig addr : {multiSigAddr}</div>;
+  return (
+    <div>
+      <div>MultiSig Address: {multiSigCA}</div>
+      <button onClick={() => navigate("/applyDonatePJ")}>
+        기부 프로젝트 등록
+      </button>
+    </div>
+  );
 };
 
 export default ResultMultiSig;

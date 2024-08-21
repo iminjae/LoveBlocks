@@ -1,4 +1,4 @@
-import { ethers, Wallet } from "ethers";
+import { Wallet } from "ethers";
 import { Contract } from "ethers";
 import { JsonRpcSigner } from "ethers";
 import { Dispatch, FC, SetStateAction, useEffect, useState } from "react";
@@ -18,17 +18,17 @@ const CheckMultiSig: FC<CheckMultiSigProps> = ({
   name,
   contract,
 }) => {
-  const [multiSigContract, setmultiSigContract] = useState<Contract>();
+  const [multiSigContract, setMultiSigContract] = useState<Contract>();
 
   useEffect(() => {
     if (!multiSigContract) return;
+    console.log("multiSigAddr ", multiSigContract);
     setStep(3);
   }, [multiSigContract]);
 
   const onClickCreateMultiSig = async () => {
     const multiSigContract = await contract!.create([signer, adminSigner], 2);
-    setmultiSigContract(multiSigContract);
-    console.log("multiSigAddr ", multiSigContract);
+    setMultiSigContract(multiSigContract);
   };
 
   return (

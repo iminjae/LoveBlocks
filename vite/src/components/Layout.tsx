@@ -44,7 +44,7 @@ const Layout: FC = () => {
         setProvider={setProvider}
       />
       <div>
-        <Outlet context={{ signer, adminSigner }} />
+        <Outlet context={{ signer, adminSigner, setProvider, setSigner }} />
       </div>
       {/* <Footer />  */}
     </div>

@@ -121,7 +121,6 @@ const ReceiveDonation: FC<ReceiveDonationProps> = ({
 
   return (
     <div>
-      ReceiveDonation
       <button onClick={recevieDonation}>receive Donation</button>
     </div>
   );
