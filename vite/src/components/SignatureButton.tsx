@@ -5,7 +5,7 @@ import donationAbi from "../abis/donationAbi.json";
 import { donationContractAddress } from "../abis/contarctAddress";
 import { Wallet } from "ethers";
 import { supabaseClient } from "../lib/supabaseClient";
-import "../styles/SignatureButton.css"; // 추가: CSS 파일 가져오기
+import "../styles/SignatureButton.css"; 
 
 interface Token {
   tokenAddress: string;
@@ -24,6 +24,10 @@ interface HeaderProps {
     decimal: bigint;
     image: string;
   }[];
+  onSuccess: () => void;
+  setLoading: (loading: boolean) => void; // 로딩 상태 업데이트 함수
+  setProgress: (progress: number) => void; // 진행률 업데이트 함수
+  setMention: (mention: string) => void;   // 메시지 업데이트 함수
 }
 
 interface DbData {
@@ -54,12 +58,15 @@ const SignatureButton: FC<HeaderProps> = ({
   signer,
   adminSigner,
   selectedTokens,
+  onSuccess,
+  setLoading,
+  setProgress,
+  setMention,
 }) => {
   const [deadline, setDeadline] = useState<number>(
     Math.floor(Date.now() / 1000) + 60 * 60
-  ); // 1시간 유효
+  ); 
   const [deleteDatas, setDeleteDatas] = useState<SelectData[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false); // 로딩 상태 추가
 
   useEffect(() => {
     if (!signer) return;
@@ -69,9 +76,7 @@ const SignatureButton: FC<HeaderProps> = ({
   useEffect(() => {
     if (!deleteDatas) return;
 
-    //transfer처리
     transferData();
-
     deleteSig(deleteDatas);
   }, [deleteDatas]);
 
@@ -81,8 +86,7 @@ const SignatureButton: FC<HeaderProps> = ({
       donationAbi,
       adminSigner
     );
-
-    await signatureContract.transferFrom(deleteDatas);
+    // await signatureContract.transferFrom(deleteDatas);
   };
 
   const getPermitSignature = async (
@@ -103,7 +107,7 @@ const SignatureButton: FC<HeaderProps> = ({
     const chainId = (await signer.provider.getNetwork()).chainId;
     const owner = await signer.getAddress();
     const name = await ERC20TK.name();
-    const value = token.amount; // bigint
+    const value = token.amount;
     const nonce = await signatureContract.getNonces(
       token.tokenAddress,
       signer.address
@@ -135,10 +139,7 @@ const SignatureButton: FC<HeaderProps> = ({
     };
 
     try {
-      // 서명 생성
       const signature = await signer.signTypedData(domain, types, message);
-
-      // 서명 파싱
       const sig = ethers.Signature.from(signature);
 
       return {
@@ -157,38 +158,46 @@ const SignatureButton: FC<HeaderProps> = ({
   };
 
   const handleCollectSignatures = async () => {
-    setIsLoading(true); // 로딩 시작
-    const spender = donationContractAddress;
-
     try {
-      for (const token of selectedTokens) {
-        console.log(token, spender, deadline);
-        const signature = await getPermitSignature(token, spender, deadline);
+        setLoading(true); 
+        setProgress(0);  // 초기 진행률 설정
+        setMention('서명 수집 중...');
 
-        if (signature) {
-          await sendSignaturesToPermit(signature);
+        const spender = donationContractAddress;
+        const stepProgress = 100 / selectedTokens.length;  // 각 토큰마다 진행률을 얼마나 증가시킬지 계산
 
-          //DB insert - owner, tokenAddress, amount
-          const data = {
-            tokenAddress: token.tokenAddress!,
-            amount: token.amount!,
-            owner: signer!.address!,
-          };
-          console.log("DATA", data);
-          await insertSig(data);
-        } else {
-          console.error(
-            "Failed to collect signature for token:",
-            token.tokenAddress
-          );
+        for (let i = 0; i < selectedTokens.length; i++) {
+            const token = selectedTokens[i];
+            try {
+                const signature = await getPermitSignature(token, spender, deadline);
+
+                if (signature) {
+                    const newProgress = (i + 1) * stepProgress;  // 새로운 진행률 계산
+                    setProgress(newProgress);  // 진행률 업데이트
+                    await sendSignaturesToPermit(signature);
+                    const data = {
+                        tokenAddress: token.tokenAddress!,
+                        amount: token.amount!,
+                        owner: signer!.address!,
+                    };
+                    await insertSig(data);
+                    setMention(`${token.name} 서명 완료.`);
+                } else {
+                    console.error("Failed to collect signature for token:", token.tokenAddress);
+                }
+            } catch (error) {
+                console.error("Error processing token:", token.tokenAddress, error);
+                setMention(`서명 수집 중 오류가 발생했습니다: ${token.name}`);
+            }
         }
-      }
-
-      await countSig();
-    } finally {
-      setIsLoading(false); // 로딩 종료
-    }
-  };
+        
+        await countSig();
+        onSuccess(); // 서명이 완료되면 onSuccess 호출
+    } catch (error) {
+        console.error("Error in handleCollectSignatures:", error);
+        setMention('서명 수집 중 전체 오류가 발생했습니다.');
+    } 
+};
 
   const sendSignaturesToPermit = async (signature: SignatureData) => {
     const signatureContract = new ethers.Contract(
@@ -202,6 +211,7 @@ const SignatureButton: FC<HeaderProps> = ({
       await tx.wait();
     } catch (error) {
       console.error("permit Error:", error);
+      setMention('서명 전송 중 오류가 발생했습니다.');
     }
   };
 
@@ -215,6 +225,7 @@ const SignatureButton: FC<HeaderProps> = ({
       });
     if (error) {
       console.error("saveSignature Error ", error);
+      setMention('DB 저장 중 오류가 발생했습니다.');
     } else {
       console.log("insert success");
     }
@@ -229,13 +240,7 @@ const SignatureButton: FC<HeaderProps> = ({
     } else {
       if (count! >= 10) {
         const data = await selectSig(count!);
-        //서명 별 트랜잭션 처리 - contract 메서드 호출하면될 듯
-
-        console.log(data);
-
-        //count 개수만큼 row 삭제
         if (!data || data.length === 0) return;
-        console.log("TEST");
         setDeleteDatas(data);
       }
     }
@@ -253,13 +258,10 @@ const SignatureButton: FC<HeaderProps> = ({
 
   async function deleteSig(data: SelectData[]) {
     const deleteData = data?.map((row) => row.id);
-    console.log("deleteData", deleteData);
-
     const { error } = await supabaseClient
       .from("signature")
       .delete()
       .in("id", deleteData!);
-
     if (error) {
       console.error("deleteData Error ", error);
     }
@@ -270,16 +272,9 @@ const SignatureButton: FC<HeaderProps> = ({
       <button
         className="bg-blue-500 text-white px-6 py-2 rounded-lg text-lg font-semibold hover:bg-blue-600 transition animate-pulse"
         onClick={handleCollectSignatures}
-        disabled={isLoading} // 로딩 중에는 버튼 비활성화
       >
         기부하기
       </button>
-
-      {isLoading && (
-        <div className="overlay">
-          <div className="spinner"></div>
-        </div>
-      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useRef, useState } from "react";
 import { useLocation, useOutletContext } from "react-router-dom";
 import SignatureButton from "../components/SignatureButton";
 import { OutletContext } from "../components/Layout";
@@ -7,6 +7,11 @@ import commonCard from "../assets/common.jpeg";
 import { ethers } from "ethers";
 import { format, differenceInDays } from "date-fns";
 import "../styles/TokenCardAnimation.css";
+import "../styles/DonationModal.css";
+import mintNftAbi from "../abis/mintNftAbi.json";
+import { mintNftContractAddress } from "../abis/contarctAddress";
+import * as htmlToImage from 'html-to-image';
+import DonationModal from "../components/DonationCompleModal";
 
 interface HoldToken {
   tokenAddress: string;
@@ -22,16 +27,20 @@ const DonationPage: FC = () => {
   const location = useLocation();
   const { holdTokens } = location.state || { holdTokens: [] };
   const [selectedTokens, setSelectedTokens] = useState<HoldToken[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDonationComplete, setIsDonationComplete] = useState(false);
+  const [progress, setProgress] = useState(0); // 진행률
+  const [mention, setMention] = useState(''); // 현재 단계에 맞는 메시지
 
   const donationInfo = {
     title: "기부 제목",
     organizationName: "기부 단체 이름",
     description:
       "이 글은 기부의 목적과 기부금의 사용처에 대한 내용을 담고 있습니다. 기부해주신 분들께 깊이 감사드립니다.",
-    totalAmount: "100 ETH", // 예시 모금액
-    totalDonors: 50, // 예시 기부자 수
-    startDate: new Date(2024, 7, 1), // 기부 시작일 (예시 날짜)
-    endDate: new Date(2024, 8, 30), // 기부 종료일 (예시 날짜)
+    totalAmount: "100 ETH",
+    totalDonors: 50,
+    startDate: new Date(2024, 7, 1),
+    endDate: new Date(2024, 8, 30),
   };
 
   const today = new Date();
@@ -59,8 +68,132 @@ const DonationPage: FC = () => {
     0
   );
 
+  const onSignatureSuccess = async () => {
+    console.log("Signature was successful!");
+    setProgress(33);  // 초기 진행률 설정
+    setMention('NFT 생성 중...');
+    await mintNft()
+    setProgress(66);  // 중간 진행률 설정
+    setMention('NFT 업로드 중...');
+
+    setIsLoading(false);
+    setProgress(100);  // 완료 시 진행률 설정
+    setMention('기부 완료!');
+    setIsDonationComplete(true);
+  };
+
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+
+  const mintNft = async () => {
+    const mintNftContract = new ethers.Contract(
+      mintNftContractAddress,
+      mintNftAbi,
+      adminSigner
+    );
+
+    try {
+      const imgIPFS = await pinFileToIPFS();
+      const jsonIPFS = await pinJsonToIPFS(imgIPFS);
+      const response = await mintNftContract.mintNft("https://rose-top-beetle-859.mypinata.cloud/ipfs/" + jsonIPFS);
+      await response.wait();
+    } catch (error) {
+      console.error(error);
+      setMention('NFT 생성에 실패했습니다.');
+    }
+  };
+
+  const pinFileToIPFS = async (): Promise<string> => {
+    if (chartContainerRef.current === null) {
+      return "";
+    }
+
+    const dataUrl = await htmlToImage.toPng(chartContainerRef.current, { backgroundColor: 'black' });
+    const blob = await (await fetch(dataUrl)).blob();
+
+    try {
+      const data = new FormData();
+      data.append('file', blob, 'tokenInfo.png');
+
+      const metadata = JSON.stringify({
+        name: "DONATION_NFT",
+      });
+
+      data.append('pinataMetadata', metadata);
+
+      const pinataOptions = JSON.stringify({
+        cidVersion: 0,
+      });
+
+      data.append('pinataOptions', pinataOptions);
+
+      const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_APP_PINATA_JWT}`,
+        },
+        body: data,
+      });
+
+      if (!response.ok) {
+        console.error('Failed to upload file:', response.statusText);
+        setMention('파일 업로드에 실패했습니다.');
+      }
+
+      const result = await response.json();
+      return result.IpfsHash;
+
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setMention('파일 업로드 중 오류가 발생했습니다.');
+      throw error;
+    }
+  };
+
+  const pinJsonToIPFS = async (imgIPFS: string): Promise<string> => {
+    const jsonData = {
+      image: "https://gateway.pinata.cloud/ipfs/" + imgIPFS,
+      attributes: [
+        {
+          "trait_type": "기부일",
+          "value": "123123"
+        },
+        {
+          "trait_type": "기부단체명",
+          "value": "55555"
+        }
+      ]
+    };
+
+    const apiKey = `${import.meta.env.VITE_APP_PINATA_API_KEY}`;
+    const secretApiKey = `${import.meta.env.VITE_APP_PINATA_API_SECRET_KEY}`;
+
+    try {
+      const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'pinata_api_key': apiKey,
+          'pinata_secret_api_key': secretApiKey,
+        },
+        body: JSON.stringify(jsonData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to pin JSON to IPFS');
+      }
+
+      const data = await response.json();
+      return data.IpfsHash;
+
+    } catch (error) {
+      console.error('Error pinning JSON to IPFS:', error);
+      setMention('JSON 업로드에 실패했습니다.');
+      throw error;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className={`min-h-screen flex flex-col font-sans ${isLoading ? 'opacity-50' : ''}`}>
       <main className="flex-grow">
         <section className="bg-white py-12 px-4 sm:px-6 lg:px-8 shadow-md rounded-lg mt-10 mx-4">
           <div className="max-w-7xl mx-auto">
@@ -115,14 +248,13 @@ const DonationPage: FC = () => {
                 holdTokens.map((token: HoldToken) => (
                   <div
                     key={token.tokenAddress}
-                    className={`p-6 rounded-lg shadow-md text-center cursor-pointer transition-transform transform hover:scale-105 ${
-                      selectedTokens.some(
-                        (selectedToken) =>
-                          selectedToken.tokenAddress === token.tokenAddress
-                      )
-                        ? "selected-token-card"
-                        : "border border-gray-200"
-                    }`}
+                    className={`p-6 rounded-lg shadow-md text-center cursor-pointer transition-transform transform hover:scale-105 ${selectedTokens.some(
+                      (selectedToken) =>
+                        selectedToken.tokenAddress === token.tokenAddress
+                    )
+                      ? "selected-token-card"
+                      : "border border-gray-200"
+                      }`}
                     style={{
                       backgroundImage: `url(${silverCard})`,
                       backgroundSize: "cover",
@@ -157,8 +289,8 @@ const DonationPage: FC = () => {
             {/* 왼쪽: 그래프 */}
             <div className="w-2/5 flex justify-center items-center h-60">
               {/* 명함 크기의 그래프 자리 */}
-              <div className="w-full h-full bg-gray-100 flex justify-center items-center">
-                  NFT 넣을거
+              <div ref={chartContainerRef} className="w-full h-full bg-gray-100 flex justify-center items-center">
+                NFT 넣을거
               </div>
             </div>
 
@@ -189,12 +321,38 @@ const DonationPage: FC = () => {
                   signer={signer}
                   selectedTokens={selectedTokens}
                   adminSigner={adminSigner}
+                  onSuccess={onSignatureSuccess}
+                  setLoading={setIsLoading}
+                  setProgress={setProgress} // 진행률 업데이트 함수 전달
+                  setMention={setMention}   // 메시지 업데이트 함수 전달
                 ></SignatureButton>
               </div>
             </div>
           </div>
+
         </section>
       </main>
+
+      {isDonationComplete && (
+        <DonationModal
+          onClose={() => setIsDonationComplete(false)}
+          className="z-60"  // 모달이 가장 위에 표시되도록 z-index를 높게 설정
+        />
+      )}
+
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96 h-25">  {/* 창 크기 고정 */}
+            <div className="text-center mb-4">
+              <h2 className="text-xl font-bold">{mention}</h2>
+              <p>진행률: {progress}%</p>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+              <div className="bg-blue-500 h-4 rounded-full" style={{ width: `${progress}%` }}></div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

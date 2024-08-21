@@ -175,12 +175,12 @@ const Home: FC = () => {
     //   <ClovaOCR></ClovaOCR>
     // </div>
 
-    <div className="min-h-screen bg-toss-light flex flex-col font-sans">
+    <div className="min-h-screen bg-toss-light flex flex-col font-sans ">
 
       {/* Hero Section */}
-      <main className="flex-grow">
-      <section className="bg-contain bg-center bg-no-repeat text-black py-24 text-center">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="flex-grow ">
+      <section className="bg-contain bg-center bg-no-repeat text-black py-24 text-center  h-[60vh]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
             <h2 className="text-7xl font-bold leading-tight p-10">
               {text}
               <Cursor cursorColor="#000" />
