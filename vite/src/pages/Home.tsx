@@ -1,8 +1,8 @@
-import React, { FC, useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { OutletContext } from "../components/Layout";
 import axios from "axios";
-import {  ethers } from "ethers";
+import { ethers } from "ethers";
 import ClovaOCR from "../components/ClovaOCR";
 
 interface TokenCoinGecko {
@@ -28,7 +28,7 @@ const Home: FC = () => {
   const { signer } = useOutletContext<OutletContext>();
 
   const [tokenInfos, setTokenInfos] = useState<TokenCoinGecko[]>([]);
-  const [tokenAddrs, setTokenAddrs] = useState<string[]>([]);
+  const [tokenAddrs, setTokenAddrs] = useState<TokenCoinGecko[]>([]);
   const [holdTokens, setHoldTokens] = useState<HoldToken[]>([]);
 
   const tokenAbi = [
@@ -39,7 +39,7 @@ const Home: FC = () => {
   ];
 
   //1. 코인게코 api를 사용해서 아비트럼 체인 내의 토큰 주소를 전부 가져온다
-  async function getArbitrumTokensAddress() {
+  const getArbitrumTokensAddress = async () => {
     try {
       const response = await axios.get(
         "https://api.coingecko.com/api/v3/coins/list?include_platform=true"
@@ -53,81 +53,106 @@ const Home: FC = () => {
         );
         return tokenAddr;
       });
-      setTokenInfos(tokens);
 
-      //토큰 주소만 저장
-      const tokenAddr = tokens.map((token: TokenCoinGecko) => {
-        const platform = token.platforms ?? {};
-        return platform["arbitrum-one"];
-      });
-      setTokenAddrs(tokenAddr);
+      setTokenAddrs(tokens);
 
       console.log("getArbitrumTokensAddress success");
     } catch (error) {
       console.error("getArbitrumTokensAddress, ", error);
     }
-  }
+  };
 
-  //2. 각 토큰 주소에 signer의 지갑주소로 balanceOf
-  async function getBalance(tokenAddrs: string[]) {
-    const balanceData = tokenAddrs.map(async (tokenAddr) => {
+  const checkToken = async () => {
+    const data = tokenAddrs.map(async (token) => {
       const contract = new ethers.Contract(
-        tokenAddr,
+        token.platforms["arbitrum-one"]!,
         tokenAbi,
         signer!.provider
       );
 
       try {
         const balance = await contract.balanceOf(signer!.address);
-
-        const name = await contract.name();
-        const symbol = await contract.symbol();
         const decimal = await contract.decimals();
 
-        const formattedBalance = balance;
-        // const formattedBalance = ethers.formatUnits(balance, decimal);
-
+        const formattedBalance = ethers.formatUnits(balance, decimal);
         if (Number(formattedBalance) > 0) {
-          return {
-            tokenAddress: tokenAddr,
-            amount: formattedBalance,
-            name,
-            symbol,
-            decimal,
-            image: "",
-          };
+          return token;
         }
-      } catch (error) {
-        // console.error("Get Balance Error, ", error);
-      }
+      } catch (error) {}
     });
+    const results = await Promise.all(data);
+    const tokenInfos = results.filter((result) => result !== undefined);
+    setTokenInfos(tokenInfos);
+  };
 
-    const results = await Promise.all(balanceData);
+  const fetchData = async () => {
+    const ids = tokenInfos.map((token) => token.id).join(",");
+    try {
+      const response = await axios.get(
+        "https://api.coingecko.com/api/v3/coins/markets",
+        {
+          params: {
+            vs_currency: "usd", // 기준 통화 설정
+            ids: ids,
+          },
+        }
+      );
 
-    // 잔액이 있는 토큰만 필터링
-    const holdTokens = results.filter((result) => result !== undefined);
+      const holdTokens: HoldToken[] = response.data
+        .map(async (item: any) => {
+          const tokenInfo = tokenInfos.find((token) => token.id === item.id);
 
-    setHoldTokens(holdTokens);
-    console.log("balanceData: ", holdTokens);
-  }
+          const contract = new ethers.Contract(
+            tokenInfo!.platforms["arbitrum-one"]!,
+            tokenAbi,
+            signer!.provider
+          );
+
+          const balance = await contract.balanceOf(signer!.address);
+          const decimal = await contract.decimals();
+
+          if (tokenInfo) {
+            return {
+              tokenAddress: tokenInfo.platforms["arbitrum-one"], // 플랫폼에 따라 주소 선택
+              amount: balance, // 실제 값으로 대체 필요
+              name: item.name,
+              symbol: item.symbol,
+              decimal: decimal, // 실제 값으로 대체 필요
+              image: item.image,
+            };
+          }
+
+          return null;
+        })
+        .filter((item: any): item is HoldToken => item !== null); // null 필터링
+
+      const results = await Promise.all(holdTokens);
+      setHoldTokens(results);
+    } catch (err) {
+      console.error("Error fetching market data:", err);
+    }
+  };
 
   useEffect(() => {
-    if (!signer) return;
-    getArbitrumTokensAddress();
-  }, [signer]);
-
-  useEffect(() => {
-    if (!tokenAddrs) return;
-    getBalance(tokenAddrs);
+    if (tokenAddrs.length === 0) return;
+    checkToken();
   }, [tokenAddrs]);
 
   useEffect(() => {
-    if (!holdTokens) return;
-    // getTokenImage(holdTokens);
+    if (tokenInfos.length === 0) return;
+    fetchData();
+  }, [tokenInfos]);
+
+  useEffect(() => {
+    if (tokenInfos.length === 0) return;
+    console.log(holdTokens);
   }, [holdTokens]);
 
   return (
     <div className="bg-red-200">
+      <div>
+        <button onClick={getArbitrumTokensAddress}>시작하자</button>
+      </div>
       <button onClick={() => navigate("/donation", { state: { holdTokens } })}>
         기부하러 가기
       </button>
