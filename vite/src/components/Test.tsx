@@ -27,12 +27,6 @@ const ARBITRUM_TOKENS = [
   { address: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8', coingeckoId: 'usd-coin' }, // USDC
   { address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1', coingeckoId: 'weth' },     // WETH
   { address: '0x912CE59144191C1204E64559FE8253a0e49E6548', coingeckoId: 'arbitrum' }, // ARB
-  { address: '0xc87b37a581ec3257b734886d9d3a581f5a9d056c', coingeckoId: 'Aeither' }, // ATH
-  { address: '0x25d887ce7a35172c62febfd67a1856f20faebb00', coingeckoId: 'PEPE' }, // ATH
-  { address: '0x13ad51ed4f1b7e9dc168d8a00cb3f4ddd85efa60', coingeckoId: 'Ldo' }, // ATH
-  { address: '0xb0ffa8000886e57f86dd5264b9582b2ad87b2b91', coingeckoId: 'Wormhole' }, // ATH
-  { address: '0x0c880f6761f1af8d9aa9c466984b80dab9a8c9e8', coingeckoId: 'Pendle' }, // ATH
-
 ];
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
