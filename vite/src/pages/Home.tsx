@@ -3,7 +3,6 @@ import { useNavigate, useOutletContext } from "react-router-dom";
 import { OutletContext } from "../components/Layout";
 import axios from "axios";
 import { ethers } from "ethers";
-import ClovaOCR from "../components/ClovaOCR";
 import { useTypewriter, Cursor } from 'react-simple-typewriter';
 import silverCard from "../assets/silverCard.jpg"
 
@@ -96,7 +95,9 @@ const Home: FC = () => {
         if (Number(formattedBalance) > 0) {
           return token;
         }
-      } catch (error) {}
+      } catch (error) {
+        // console.error(error);
+      }
     });
     const results = await Promise.all(data);
     const tokenInfos = results.filter((result) => result !== undefined);
@@ -232,7 +233,7 @@ const Home: FC = () => {
                               alt={token.name}
                               className="w-16 h-16 mx-auto"
                             />
-                            <h3 className="text-xl font-bold mt-4">{token.name}</h3>
+                            <h3 className="text-xl font-bold mt-4">{token.symbol.toUpperCase()}</h3>
                             <p className="mt-2">
                               잔액: {ethers.formatUnits(token.amount, token.decimal)}
                             </p>

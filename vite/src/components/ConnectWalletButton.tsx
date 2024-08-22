@@ -87,21 +87,21 @@ const ConnectWalletButton: FC<ConnectWalletButtonProps> = ({
   };
 
   return (
-    <div>
+    <>
       {localStorage.getItem("addr") ? (
-        <button onClick={onClickLogout}>
+        <button onClick={onClickLogout} className="text-toss-gray hover:text-toss-blue">
           {localStorage.getItem("addr")?.substring(0, 5)}...
           {localStorage.getItem("addr")?.substring(15, 20)}
         </button>
       ) : signer ? (
-        <button onClick={onClickLogout}>
+        <button onClick={onClickLogout} className="text-toss-gray hover:text-toss-blue">
           {signer.address.substring(0, 5)}...
           {signer.address.substring(15, 20)}
         </button>
       ) : (
-        <button onClick={onClickMetamask}>Connect Wallet</button>
+        <button onClick={onClickMetamask} className="text-toss-gray hover:text-toss-blue">Connect Wallet</button>
       )}
-    </div>
+    </>
   );
 };
 
