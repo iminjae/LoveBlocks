@@ -1,0 +1,19 @@
+/* 기존 DonationModal 컴포넌트의 스타일 수정 */
+.donation-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* 기존의 검정 배경을 유지합니다 */
+    z-index: 50; /* 모달보다 낮게 설정합니다 */
+  }
+  
+  .donation-modal-content {
+    position: relative;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 60; /* 배경보다 높은 z-index 설정 */
+    max-width: 500px;
+    margin: auto;
+  }
+  

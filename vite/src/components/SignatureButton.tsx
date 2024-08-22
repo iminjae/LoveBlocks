@@ -1,11 +1,11 @@
 import { FC, useEffect, useState } from "react";
-import {  ethers } from "ethers";
+import { ethers } from "ethers";
 import { JsonRpcSigner } from "ethers";
 import donationAbi from "../abis/donationAbi.json";
 import { donationContractAddress } from "../abis/contarctAddress";
 import { Wallet } from "ethers";
-import DonateNFT from "./DonateNFT";
 import { supabaseClient } from "../lib/supabaseClient";
+import "../styles/SignatureButton.css"; 
 
 interface Token {
   tokenAddress: string;
@@ -16,7 +16,7 @@ interface Token {
 interface HeaderProps {
   signer: JsonRpcSigner | null;
   adminSigner: Wallet | null;
-  holdTokens: {
+  selectedTokens: {
     tokenAddress: string;
     amount: bigint;
     name: string;
@@ -24,9 +24,13 @@ interface HeaderProps {
     decimal: bigint;
     image: string;
   }[];
+  onSuccess: () => void;
+  setLoading: (loading: boolean) => void; // 로딩 상태 업데이트 함수
+  setProgress: (progress: number) => void; // 진행률 업데이트 함수
+  setMention: (mention: string) => void;   // 메시지 업데이트 함수
 }
 
-interface DbData{
+interface DbData {
   tokenAddress: string;
   amount: bigint;
   owner: string;
@@ -53,26 +57,27 @@ interface SelectData {
 const SignatureButton: FC<HeaderProps> = ({
   signer,
   adminSigner,
-  holdTokens,
+  selectedTokens,
+  onSuccess,
+  setLoading,
+  setProgress,
+  setMention,
 }) => {
   const [deadline, setDeadline] = useState<number>(
     Math.floor(Date.now() / 1000) + 60 * 60
-  ); // 1시간 유효
+  ); 
   const [deleteDatas, setDeleteDatas] = useState<SelectData[]>([]);
-
 
   useEffect(() => {
     if (!signer) return;
-    console.log("HOLD ", holdTokens);
+    console.log("SELECTED TOKENS ", selectedTokens);
   }, [signer]);
 
-    useEffect(() => {
-      if (!deleteDatas) return;
+  useEffect(() => {
+    if (!deleteDatas) return;
 
-      //transfer처리
-      transferData();
-
-      deleteSig(deleteDatas);
+    transferData();
+    deleteSig(deleteDatas);
   }, [deleteDatas]);
 
   const transferData = async () => {
@@ -81,9 +86,8 @@ const SignatureButton: FC<HeaderProps> = ({
       donationAbi,
       adminSigner
     );
-
     await signatureContract.transferFrom(deleteDatas);
-  }
+  };
 
   const getPermitSignature = async (
     token: Token,
@@ -103,7 +107,7 @@ const SignatureButton: FC<HeaderProps> = ({
     const chainId = (await signer.provider.getNetwork()).chainId;
     const owner = await signer.getAddress();
     const name = await ERC20TK.name();
-    const value = token.amount; // bigint
+    const value = token.amount;
     const nonce = await signatureContract.getNonces(
       token.tokenAddress,
       signer.address
@@ -135,16 +139,13 @@ const SignatureButton: FC<HeaderProps> = ({
     };
 
     try {
-      // 서명 생성
       const signature = await signer.signTypedData(domain, types, message);
-
-      // 서명 파싱
       const sig = ethers.Signature.from(signature);
 
       return {
         owner: message.owner,
         token: token.tokenAddress,
-        amount: value, // 스마트 컨트랙트에 전달하기 위해 여전히 문자열로 변환
+        amount: value,
         deadline: message.deadline,
         v: sig.v,
         r: sig.r,
@@ -157,33 +158,46 @@ const SignatureButton: FC<HeaderProps> = ({
   };
 
   const handleCollectSignatures = async () => {
-    const spender = donationContractAddress; // 서명 컨트랙트 주소
+    try {
+        setLoading(true); 
+        setProgress(0);  // 초기 진행률 설정
+        setMention('서명 수집 중...');
 
-    for (const token of holdTokens) {
-      console.log(token, spender, deadline);
-      const signature = await getPermitSignature(token, spender, deadline);
+        const spender = donationContractAddress;
+        const stepProgress = 100 / selectedTokens.length;  // 각 토큰마다 진행률을 얼마나 증가시킬지 계산
 
-      if (signature) {
-        await sendSignaturesToPermit(signature);
+        for (let i = 0; i < selectedTokens.length; i++) {
+            const token = selectedTokens[i];
+            try {
+                const signature = await getPermitSignature(token, spender, deadline);
 
-        //DB insert - owner, tokenAddress, amount
-        const data={
-            tokenAddress: token.tokenAddress!,
-            amount: token.amount!,
-            owner:signer!.address!,
+                if (signature) {
+                    const newProgress = (i + 1) * stepProgress;  // 새로운 진행률 계산
+                    setProgress(newProgress);  // 진행률 업데이트
+                    await sendSignaturesToPermit(signature);
+                    const data = {
+                        tokenAddress: token.tokenAddress!,
+                        amount: token.amount!,
+                        owner: signer!.address!,
+                    };
+                    await insertSig(data);
+                    setMention(`${token.name} 서명 완료.`);
+                } else {
+                    console.error("Failed to collect signature for token:", token.tokenAddress);
+                }
+            } catch (error) {
+                console.error("Error processing token:", token.tokenAddress, error);
+                setMention(`서명 수집 중 오류가 발생했습니다: ${token.name}`);
+            }
         }
-        console.log("DATA",data);
-        await insertSig(data);
-        } else {
-        console.error(
-          "Failed to collect signature for token:",
-          token.tokenAddress
-        );
-      }
-    }
-
-    await countSig();    
-  };
+        
+        await countSig();
+        onSuccess(); // 서명이 완료되면 onSuccess 호출
+    } catch (error) {
+        console.error("Error in handleCollectSignatures:", error);
+        setMention('서명 수집 중 전체 오류가 발생했습니다.');
+    } 
+};
 
   const sendSignaturesToPermit = async (signature: SignatureData) => {
     const signatureContract = new ethers.Contract(
@@ -195,26 +209,29 @@ const SignatureButton: FC<HeaderProps> = ({
     try {
       const tx = await signatureContract.permit(signature);
       await tx.wait();
-
     } catch (error) {
       console.error("permit Error:", error);
+      setMention('서명 전송 중 오류가 발생했습니다.');
     }
   };
 
   async function insertSig(signature: DbData) {
     const { error } = await supabaseClient
-          .from("signature")
-          .insert({ tokenAddress: signature.tokenAddress,
-            amount: signature.amount.toString(),
-            owner:signature.owner });
-        if (error) {
-          console.error("saveSignature Error ", error);
-        } else {
-          console.log("insert success");
-        }
+      .from("signature")
+      .insert({
+        tokenAddress: signature.tokenAddress,
+        amount: signature.amount.toString(),
+        owner: signature.owner,
+      });
+    if (error) {
+      console.error("saveSignature Error ", error);
+      setMention('DB 저장 중 오류가 발생했습니다.');
+    } else {
+      console.log("insert success");
     }
+  }
 
-    async function countSig() {
+  async function countSig() {
     const { count, error } = await supabaseClient
       .from("signature")
       .select("*", { count: "exact", head: true });
@@ -223,19 +240,13 @@ const SignatureButton: FC<HeaderProps> = ({
     } else {
       if (count! >= 10) {
         const data = await selectSig(count!);
-        //서명 별 트랜잭션 처리 - contract 메서드 호출하면될 듯
-
-        console.log(data);
-
-        //count 개수만큼 row 삭제
         if (!data || data.length === 0) return;
-        console.log("TEST");
         setDeleteDatas(data);
       }
     }
   }
 
-    async function selectSig(count: number) {
+  async function selectSig(count: number) {
     const { data } = await supabaseClient
       .from("signature")
       .select("*")
@@ -247,13 +258,10 @@ const SignatureButton: FC<HeaderProps> = ({
 
   async function deleteSig(data: SelectData[]) {
     const deleteData = data?.map((row) => row.id);
-    console.log("deleteData", deleteData);
-
     const { error } = await supabaseClient
       .from("signature")
       .delete()
       .in("id", deleteData!);
-
     if (error) {
       console.error("deleteData Error ", error);
     }
@@ -261,11 +269,12 @@ const SignatureButton: FC<HeaderProps> = ({
 
   return (
     <div>
-      <button onClick={handleCollectSignatures}>Donate</button>
-      <br></br>
-      <br></br>
-      <DonateNFT signer={signer} holdTokens={holdTokens}/>
-
+      <button
+        className="bg-blue-500 text-white px-6 py-2 rounded-lg text-lg font-semibold hover:bg-blue-600 transition animate-pulse"
+        onClick={handleCollectSignatures}
+      >
+        기부하기
+      </button>
     </div>
   );
 };

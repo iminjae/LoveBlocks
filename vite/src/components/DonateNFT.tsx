@@ -33,7 +33,7 @@ interface SignatureData {
 
 interface HoldToken {
     tokenAddress: string;
-    amount: number;
+    amount: bigint;
     name: string;
     symbol: string;
     decimal: bigint;
@@ -262,13 +262,13 @@ const DonateNFT: FC<HeaderProps> = ({ signer, holdTokens }) => {
                 </PieChart>
                 <div style={{ display: 'flex', alignItems: 'center', marginTop: '1px' }}>
                     {holdTokens.map((token, index) => (
-                        <div key={index} style={{ display: 'flex', alignItems: 'center', marginRight: '20px' }}>
-                            <div style={{ width: '20px', height: '20px', marginRight: '10px' }}>
+                        <div key={index} style={{ display: 'flex', alignItems: 'center'}}>
+                            <div style={{ width: '20px', height: '20px', marginRight: '5px' }}>
                                 {/* <img src={token.image} alt={token.symbol} style={{ width: '100%', height: '100%', borderRadius: '50%' }} /> */}
 
-                                <img src="https://assets.coingecko.com/coins/images/38301/thumb/altr.jpg?1717034749" alt={token.symbol} style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                                <img src={token.image} alt={token.symbol} style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
                             </div>
-                            <span style={{ fontSize: '16px', fontWeight: 'bold', color: COLORS[index % COLORS.length] }}>
+                            <span style={{ fontSize: '16px', fontWeight: 'bold', color: COLORS[index % COLORS.length], marginRight: '15px'}}>
                                 {token.symbol}
                             </span>
                         </div>
