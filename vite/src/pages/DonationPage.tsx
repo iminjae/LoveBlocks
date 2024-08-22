@@ -342,6 +342,7 @@ const DonationPage: FC = () => {
                   보유한 토큰이 없습니다.
                 </p>
               )}
+              
             </div>
           </div>
 
