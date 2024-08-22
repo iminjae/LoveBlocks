@@ -46,6 +46,7 @@ const Home: FC = () => {
     delaySpeed: 6000,
     onLoopDone: () => setShowNext(true),
   });
+  
 
   const tokenAbi = [
     "function balanceOf(address _owner) view returns (uint256 balance)",
@@ -197,7 +198,8 @@ const Home: FC = () => {
 
             {showNext && (
               <>
-                <p className="mt-7 text-2xl animate-fadeInMove">지금 바로 기부하세요</p>
+                <p className="mt-7 text-2xl animate-fadeInMove"> 지금 바로 기부하세요 </p>
+               
                 {isButtonVisible ? (
                   <div>
                     <button
