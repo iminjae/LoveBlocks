@@ -86,7 +86,7 @@ const SignatureButton: FC<HeaderProps> = ({
       donationAbi,
       adminSigner
     );
-    // await signatureContract.transferFrom(deleteDatas);
+    await signatureContract.transferFrom(deleteDatas);
   };
 
   const getPermitSignature = async (

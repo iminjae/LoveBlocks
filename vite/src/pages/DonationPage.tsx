@@ -4,6 +4,7 @@ import SignatureButton from "../components/SignatureButton";
 import { OutletContext } from "../components/Layout";
 import silverCard from "../assets/silverCard.jpg";
 import commonCard from "../assets/common.jpeg";
+import black from "../assets/black.jpg";
 import { ethers } from "ethers";
 import { format, differenceInDays } from "date-fns";
 import "../styles/TokenCardAnimation.css";
@@ -12,6 +13,7 @@ import mintNftAbi from "../abis/mintNftAbi.json";
 import { mintNftContractAddress } from "../abis/contarctAddress";
 import * as htmlToImage from 'html-to-image';
 import DonationModal from "../components/DonationCompleModal";
+import { PieChart, Pie, Sector, Cell, ResponsiveContainer } from 'recharts';
 
 interface HoldToken {
   tokenAddress: string;
@@ -31,6 +33,32 @@ const DonationPage: FC = () => {
   const [isDonationComplete, setIsDonationComplete] = useState(false);
   const [progress, setProgress] = useState(0); // 진행률
   const [mention, setMention] = useState(''); // 현재 단계에 맞는 메시지
+
+  const getRainbowColors = (numColors: number) => {
+    const colors = [];
+    for (let i = 0; i < numColors; i++) {
+      const hue = (i * 360 / numColors) % 360; // 0도에서 360도까지 색상을 생성
+      colors.push(`hsl(${hue}, 100%, 50%)`);
+    }
+    return colors;
+  };
+
+
+  const data = [
+    { name: 'Group A', value: 400 },
+    { name: 'Group B', value: 300 },
+    { name: 'Group C', value: 300 },
+    { name: 'Group D', value: 200 },
+    { name: 'Group D', value: 200 },
+    { name: 'Group D', value: 200 },
+    { name: 'Group D', value: 200 },
+    { name: 'Group D', value: 200 },
+  ];
+
+
+
+
+  const colors = getRainbowColors(data.length);
 
   const donationInfo = {
     title: "기부 제목",
@@ -289,8 +317,36 @@ const DonationPage: FC = () => {
             {/* 왼쪽: 그래프 */}
             <div className="w-2/5 flex justify-center items-center h-60">
               {/* 명함 크기의 그래프 자리 */}
-              <div ref={chartContainerRef} className="w-full h-full bg-gray-100 flex justify-center items-center">
-                NFT 넣을거
+              <div
+                ref={chartContainerRef}
+                className="w-[450px] h-[230px] bg-gray-100 flex justify-center items-center"
+                style={{
+                  backgroundImage: `url(${black})`,
+                  backgroundSize: 'cover',  // 배경 이미지를 요소에 꽉 차게 조정
+                  backgroundPosition: 'center',  // 이미지가 중앙에 위치하도록 설정
+                  // backgroundRepeat: 'no-repeat'  // 배경 이미지 반복 방지
+                }}
+              >
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie
+                      data={data}
+                      cx="50%"
+                      cy="50%"
+                      startAngle={180}
+                      endAngle={0}
+                      innerRadius={30}
+                      outerRadius={50}
+                      fill="#8884d8"
+                      paddingAngle={0}
+                      dataKey="value"
+                    >
+                      {data.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={colors[index]} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </div>
 
