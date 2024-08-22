@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import Header from "./Header";
 import { ethers, JsonRpcSigner } from "ethers";
 import { Wallet } from "ethers";
+import Footer from "./Footer";
 // import Footer from "./Footer";
 
 export interface OutletContext {
@@ -43,10 +44,10 @@ const Layout: FC = () => {
         provider={provider}
         setProvider={setProvider}
       />
-      <div>
-        <Outlet context={{ signer, adminSigner }} />
+      <div style={{ paddingTop: '60px' }}>
+        <Outlet context={{ signer, adminSigner, setProvider, setSigner }} />
       </div>
-      {/* <Footer />  */}
+      <Footer /> 
     </div>
   );
 };

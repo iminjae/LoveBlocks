@@ -4,10 +4,6 @@ import { JsonRpcSigner } from "ethers";
 import donationAbi from "../abis/donationAbi.json";
 import { donationContractAddress } from "../abis/contarctAddress";
 
-
-
-
-
 interface HeaderProps {
     signer: JsonRpcSigner | null;
 }
