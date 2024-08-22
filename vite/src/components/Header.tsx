@@ -1,6 +1,7 @@
 import { ethers, JsonRpcSigner } from "ethers";
 import { Dispatch, FC, SetStateAction, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import ConnectWalletButton from "./ConnectWalletButton";
 
 interface HeaderProps {
   signer: JsonRpcSigner | null;
@@ -11,79 +12,6 @@ interface HeaderProps {
 
 const Header: FC<HeaderProps> = ({ signer, setSigner, setProvider }) => {
   const navigate = useNavigate();
-
-  const getSigner = async () => {
-    if (!window.ethereum) return;
-
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    setProvider(provider);
-    setSigner(await provider.getSigner());
-  };
-
-  const onClickMetamask = async () => {
-    try {
-      getSigner();
-      switchToArbitrum();
-      
-      localStorage.setItem("isLogin", "true");
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const onClickLogout = () => {
-    setSigner(null);
-
-    localStorage.removeItem("isLogin");
-    localStorage.removeItem("addr");
-  };
-
-  useEffect(() => {
-    const localIsLogin = localStorage.getItem("isLogin");
-    if (localIsLogin === "true") {
-      getSigner();
-    }
-  }, []);
-
-  const switchToArbitrum = async () => {
-    if (!window.ethereum) return;
-
-    const chainId = "0xa4b1"; //Arbitrum 체인ID
-
-    try {
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId }],
-      });
-    } catch (error) {
-      const switchError = error as { code: number; message: string };
-      //metamask 상에서 체인이 없을 때 에러 처리
-      if (switchError.code === 4902) {
-        try {
-          await window.ethereum.request({
-            method: "wallet_addEthereumChain",
-            params: [
-              {
-                chainId,
-                chainName: "Arbitrum One",
-                rpcUrls: ["https://arb1.arbitrum.io/rpc"],
-                nativeCurrency: {
-                  name: "ETH",
-                  symbol: "ETH",
-                  decimals: 18,
-                },
-                blockExplorerUrls: ["https://arbiscan.io"],
-              },
-            ],
-          });
-        } catch (addError) {
-          console.error(addError);
-        }
-      } else {
-        console.error(switchError);
-      }
-    }
-  };
 
   return (
 
@@ -113,6 +41,13 @@ const Header: FC<HeaderProps> = ({ signer, setSigner, setProvider }) => {
 
 
           </nav>
+          
+<!--           <ConnectWalletButton
+        signer={signer}
+        setSigner={setSigner}
+        setProvider={setProvider}
+      ></ConnectWalletButton> -->
+          
         </div>
       </header>
 

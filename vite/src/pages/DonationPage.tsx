@@ -23,11 +23,25 @@ interface HoldToken {
   decimal: bigint;
   image: string;
 }
+interface TokenPrice {
+  id: string;
+  usd: string;
+}
+interface MergeToken {
+  tokenAddress: string;
+  amount: bigint;
+  name: string;
+  symbol: string;
+  decimal: bigint;
+  image: string;
+  usd: string;
+}
 
 const DonationPage: FC = () => {
   const { signer, adminSigner } = useOutletContext<OutletContext>();
   const location = useLocation();
-  const { holdTokens } = location.state || { holdTokens: [] };
+  const { holdTokens, tokenPrice } = location.state || { holdTokens: [], tokenPrice: [] };
+  const [mergeTokens, setMergeTokens] = useState<MergeToken[]>();
   const [selectedTokens, setSelectedTokens] = useState<HoldToken[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDonationComplete, setIsDonationComplete] = useState(false);
@@ -220,6 +234,24 @@ const DonationPage: FC = () => {
     }
   };
 
+  useEffect(() => {
+    const mergedTokens = holdTokens.map((token:HoldToken) => {
+      // 모든 가격 데이터에서 토큰의 symbol과 매칭되는 id를 찾음
+      const matchingPrice = tokenPrice.find((price:TokenPrice) => {
+          // symbol과 id를 비교할 때, 소문자로 변환하여 비교
+          return price.id.includes(token.symbol.toLowerCase());
+      });
+  
+      // 토큰 객체에 가격을 추가하여 반환
+      return {
+          ...token,
+          usd: matchingPrice ? matchingPrice.usd : null
+      };
+  });
+  
+  setMergeTokens(mergedTokens);
+  }, [tokenPrice])
+  
   return (
     <div className={`min-h-screen flex flex-col font-sans ${isLoading ? 'opacity-50' : ''}`}>
       <main className="flex-grow">
@@ -270,10 +302,10 @@ const DonationPage: FC = () => {
               </div>
             </div>
 
-            {/* 토큰 목록 */}
+//             {/* 토큰 목록 */} {(Number(ethers.formatUnits(token.amount,token.decimal))*Number(token.usd)).toFixed(2) }$
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-60">
-              {holdTokens.length > 0 ? (
-                holdTokens.map((token: HoldToken) => (
+              {mergeTokens.length > 0 ? (
+                mergeTokens.map((token: MergeToken) => (
                   <div
                     key={token.tokenAddress}
                     className={`p-6 rounded-lg shadow-md text-center cursor-pointer transition-transform transform hover:scale-105 ${selectedTokens.some(
