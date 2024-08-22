@@ -1,4 +1,4 @@
-import { FC, useRef, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { useLocation, useOutletContext } from "react-router-dom";
 import SignatureButton from "../components/SignatureButton";
 import { OutletContext } from "../components/Layout";
@@ -13,7 +13,7 @@ import mintNftAbi from "../abis/mintNftAbi.json";
 import { mintNftContractAddress } from "../abis/contarctAddress";
 import * as htmlToImage from 'html-to-image';
 import DonationModal from "../components/DonationCompleModal";
-import { PieChart, Pie, Sector, Cell, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 interface HoldToken {
   tokenAddress: string;
@@ -42,7 +42,7 @@ const DonationPage: FC = () => {
   const location = useLocation();
   const { holdTokens, tokenPrice } = location.state || { holdTokens: [], tokenPrice: [] };
   const [mergeTokens, setMergeTokens] = useState<MergeToken[]>();
-  const [selectedTokens, setSelectedTokens] = useState<HoldToken[]>([]);
+  const [selectedTokens, setSelectedTokens] = useState<MergeToken[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDonationComplete, setIsDonationComplete] = useState(false);
   const [progress, setProgress] = useState(0); // 진행률
@@ -90,7 +90,7 @@ const DonationPage: FC = () => {
   const formattedStartDate = format(donationInfo.startDate, "yyyy-MM-dd");
   const formattedEndDate = format(donationInfo.endDate, "yyyy-MM-dd");
 
-  const toggleTokenSelection = (token: HoldToken) => {
+  const toggleTokenSelection = (token: MergeToken) => {
     setSelectedTokens((prevSelectedTokens) => {
       const isSelected = prevSelectedTokens.some(
         (selectedToken) => selectedToken.tokenAddress === token.tokenAddress
@@ -106,7 +106,7 @@ const DonationPage: FC = () => {
   };
 
   const totalSelectedAmount = selectedTokens.reduce(
-    (total, token) => total + parseFloat(ethers.formatUnits(token.amount, token.decimal)),
+    (total, token) => total + parseFloat((Number(ethers.formatUnits(token.amount,token.decimal))*Number(token.usd)).toFixed(2)),
     0
   );
 
@@ -302,10 +302,10 @@ const DonationPage: FC = () => {
               </div>
             </div>
 
-//             {/* 토큰 목록 */} {(Number(ethers.formatUnits(token.amount,token.decimal))*Number(token.usd)).toFixed(2) }$
+            {/* 토큰 목록 */} 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-60">
-              {mergeTokens.length > 0 ? (
-                mergeTokens.map((token: MergeToken) => (
+              {mergeTokens! ? (
+                mergeTokens!.map((token: MergeToken) => (
                   <div
                     key={token.tokenAddress}
                     className={`p-6 rounded-lg shadow-md text-center cursor-pointer transition-transform transform hover:scale-105 ${selectedTokens.some(
@@ -330,10 +330,10 @@ const DonationPage: FC = () => {
                       className="w-16 h-16 mx-auto rounded-full"
                     />
                     <h3 className="text-xl font-bold mt-4 text-gray-800">
-                      {token.name}
+                      {token.symbol.toUpperCase()}
                     </h3>
                     <p className="mt-2 text-gray-600">
-                      잔액: {ethers.formatUnits(token.amount, token.decimal)}
+                      잔액: {(Number(ethers.formatUnits(token.amount,token.decimal))*Number(token.usd)).toFixed(2)}$
                     </p>
                   </div>
                 ))
@@ -396,14 +396,14 @@ const DonationPage: FC = () => {
                       alt={token.name}
                     />
                     <span className="text-sm font-medium text-gray-800">
-                      {token.name}: {ethers.formatUnits(token.amount, token.decimal)}
+                      {token.symbol.toUpperCase()}: {(Number(ethers.formatUnits(token.amount,token.decimal))*Number(token.usd)).toFixed(2)}$
                     </span>
                   </div>
                 ))}
               </div>
               <div className="flex justify-between items-center mt-4 p-4 rounded-lg shadow-md">
                 <div className="text-gray-900 font-bold text-lg">
-                  예상 기부 량 : {totalSelectedAmount} ETH
+                  예상 기부 량 : {totalSelectedAmount}$
                 </div>
                 <SignatureButton
                   signer={signer}

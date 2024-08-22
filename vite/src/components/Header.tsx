@@ -25,35 +25,10 @@ const Header: FC<HeaderProps> = ({ signer, setSigner, setProvider }) => {
             <button  className="text-toss-gray hover:text-toss-blue" onClick={() => navigate("/sungwoo")}>성우</button>
             <button  className="text-toss-gray hover:text-toss-blue" onClick={() => navigate("/daehwan")}>대환</button>
             <button  className="text-toss-gray hover:text-toss-blue" onClick={() => navigate("/minjae")}>민재</button>
-            {localStorage.getItem("addr") ? (
-              <button className="text-toss-gray hover:text-toss-blue" onClick={onClickLogout}>
-                {localStorage.getItem("addr")?.substring(0, 5)}...
-                {localStorage.getItem("addr")?.substring(15, 20)}
-              </button>
-            ) : signer ? (
-              <button className="text-toss-gray hover:text-toss-blue" onClick={onClickLogout}>
-                {signer.address.substring(0, 5)}...
-                {signer.address.substring(15, 20)}
-              </button>
-            ) : (
-              <button onClick={onClickMetamask}>Connect Wallet</button>
-            )}
-
-
+            <ConnectWalletButton signer={signer} setSigner={setSigner} setProvider={setProvider}></ConnectWalletButton>
           </nav>
-          
-<!--           <ConnectWalletButton
-        signer={signer}
-        setSigner={setSigner}
-        setProvider={setProvider}
-      ></ConnectWalletButton> -->
-          
         </div>
       </header>
-
-
-
-   
   );
 };
 
