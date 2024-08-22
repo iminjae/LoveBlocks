@@ -10,13 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
-    "buffer": "^6.0.3",
-    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@types/express": "^4.17.21",
     "@types/node": "^22.3.0",
     "@walletconnect/web3-provider": "^1.8.0",
+    "buffer": "^6.0.3",
     "cors": "^2.8.5",
     "dom-to-image": "^2.6.0",
     "downloadjs": "^1.4.7",
@@ -27,9 +27,9 @@
     "multer": "^1.4.5-lts.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "util": "^0.12.5",
     "recharts": "^2.12.7",
     "ts-node": "^10.9.2",
+    "util": "^0.12.5",
     "web3modal": "^1.9.12"
   },
   "devDependencies": {

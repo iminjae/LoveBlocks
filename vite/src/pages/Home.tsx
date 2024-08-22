@@ -21,6 +21,10 @@ interface HoldToken {
   decimal: bigint;
   image: string;
 }
+interface TokenPrice {
+  id: string;
+  usd: string;
+}
 
 const Home: FC = () => {
   const navigate = useNavigate();
@@ -30,6 +34,7 @@ const Home: FC = () => {
   const [tokenInfos, setTokenInfos] = useState<TokenCoinGecko[]>([]);
   const [tokenAddrs, setTokenAddrs] = useState<TokenCoinGecko[]>([]);
   const [holdTokens, setHoldTokens] = useState<HoldToken[]>([]);
+  const [tokenPrice, setTokenPrice] = useState<TokenPrice[]>([]);
 
   const tokenAbi = [
     "function balanceOf(address _owner) view returns (uint256 balance)",
@@ -98,6 +103,19 @@ const Home: FC = () => {
         }
       );
 
+      const resPrice = await axios.get(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`
+      );
+      console.log(resPrice)
+      const priceArray = Object.keys(resPrice.data).map((key) => {
+        return {
+          id: key,
+          usd: resPrice.data[key].usd,
+        };
+      });
+      console.log(priceArray)
+      setTokenPrice(priceArray);
+
       const holdTokens: HoldToken[] = response.data
         .map(async (item: any) => {
           const tokenInfo = tokenInfos.find((token) => token.id === item.id);
@@ -153,7 +171,11 @@ const Home: FC = () => {
       <div>
         <button onClick={getArbitrumTokensAddress}>시작하자</button>
       </div>
-      <button onClick={() => navigate("/donation", { state: { holdTokens } })}>
+      <button
+        onClick={() =>
+          navigate("/donation", { state: { holdTokens, tokenPrice } })
+        }
+      >
         기부하러 가기
       </button>
       <ClovaOCR></ClovaOCR>
