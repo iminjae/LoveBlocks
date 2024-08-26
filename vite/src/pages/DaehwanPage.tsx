@@ -5,6 +5,7 @@ import { OutletContext } from "../components/Layout";
 import { donationContractAddress } from "../abis/contarctAddress";
 import donationAbi from "../abis/donationAbi.json";
 import SelectedCharity from "../components/SelectedCharity";
+import OrganizationMypage from "../components/OrganizationMypage";
 
 interface Organization {
   orgAddr: string;
@@ -47,7 +48,10 @@ const DaehwanPage: FC = () => {
   return (
     <>
       {!organization ? (
+        <>
         <button onClick={selectCharity}>Select Random Charity</button>
+        <OrganizationMypage></OrganizationMypage>
+        </>
       ) : (
         <SelectedCharity
           signer={signer}

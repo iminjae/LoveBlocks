@@ -7,7 +7,7 @@ const ApplyDonationPJPage: FC = () => {
   const { signer, adminSigner } = useOutletContext<OutletContext>();
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div>
       <ApplyDonatePJ signer={signer} adminSigner={adminSigner} />
     </div>
   );
