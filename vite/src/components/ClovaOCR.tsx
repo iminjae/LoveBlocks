@@ -156,9 +156,13 @@ const ClovaOCR: FC = () => {
     setFlag(true);
   }, [flag]);
 
+  useEffect(() => {
+    if (!receiptData) return;
+    sendData();
+  }, [receiptData]);
+
   return (
     <div>
-      <h1>Clova OCR 영수증 인식</h1>
       <input type="file" accept="image/*" onChange={handleImageChange} />
       <button onClick={handleSubmit}>이미지 업로드 및 인식</button>
 
@@ -166,12 +170,6 @@ const ClovaOCR: FC = () => {
         <div style={{ color: "red" }}>
           <h2>Error:</h2>
           <p>{error}</p>
-        </div>
-      )}
-
-      {receiptData && (
-        <div>
-          <button onClick={sendData}>기록하기</button>
         </div>
       )}
     </div>

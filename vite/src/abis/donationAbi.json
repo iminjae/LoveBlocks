@@ -154,9 +154,21 @@
         "internalType": "uint256",
         "name": "amountIn",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "multisigCA",
+        "type": "address"
       }
     ],
     "name": "swapExactTokensForUSDT",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "swapUSDT",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -209,6 +221,31 @@
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getCollectToken",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "tokenAddr",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Donation.CollectToken[]",
+        "name": "",
+        "type": "tuple[]"
       }
     ],
     "stateMutability": "view",

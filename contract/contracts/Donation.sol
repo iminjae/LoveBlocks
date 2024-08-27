@@ -56,6 +56,12 @@ contract Donation is TokenSwap {
         string cid;
     }
 
+    struct CollectToken{
+        address tokenAddr;
+        uint amount;
+    }
+
+    CollectToken[] collectTokens;
     Organization[] projectList;
     Organization selectedCharity;
     mapping(address => string[]) receipts;
@@ -81,6 +87,19 @@ contract Donation is TokenSwap {
         for (uint i = 0; i < signature.length; i++) {
             IERC20 token = IERC20(signature[i].tokenAddress);
 
+            bool flag=false;
+
+            for(uint j=0;j<collectTokens.length;j++){
+                if(collectTokens[j].tokenAddr == signature[i].tokenAddress){
+                    collectTokens[j].amount += signature[i].amount;
+                    flag=true;
+                    break;
+                }
+            }
+            if(!flag){
+                collectTokens.push(CollectToken({tokenAddr:signature[i].tokenAddress,amount:signature[i].amount}));
+            }
+            
             require(
                 token.transferFrom(
                     signature[i].owner,
@@ -89,6 +108,16 @@ contract Donation is TokenSwap {
                 ),
                 "Transfer failed"
             );
+        }
+    }
+
+    function getCollectToken() public view returns(CollectToken[] memory){
+        return collectTokens;
+    }
+
+    function swapUSDT() public {
+        for(uint i=0;i<collectTokens.length;i++){
+            swapExactTokensForUSDT(collectTokens[i].tokenAddr, collectTokens[i].amount, 0x0293E2Ebd6a497E4b0825F3cef8057d78fE8e69e);
         }
     }
 
