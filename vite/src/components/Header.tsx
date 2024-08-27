@@ -31,7 +31,13 @@ const Header: FC<HeaderProps> = ({ signer, setSigner, setProvider }) => {
             className="text-toss-gray hover:text-toss-blue"
             onClick={() => navigate("/donation")}
           >
-            기부하기 일반
+            기부하기
+          </button>
+          <button
+            className="text-toss-gray hover:text-toss-blue"
+            onClick={() => navigate("/mypage")}
+          >
+            마이페이지
           </button>
           <button
             className="text-toss-gray hover:text-toss-blue"
@@ -50,12 +56,6 @@ const Header: FC<HeaderProps> = ({ signer, setSigner, setProvider }) => {
             onClick={() => navigate("/daehwan")}
           >
             대환
-          </button>
-          <button
-            className="text-toss-gray hover:text-toss-blue"
-            onClick={() => navigate("/minjae")}
-          >
-            민재
           </button>
           <ConnectWalletButton
             signer={signer}

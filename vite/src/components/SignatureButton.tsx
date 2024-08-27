@@ -5,7 +5,7 @@ import donationAbi from "../abis/donationAbi.json";
 import { donationContractAddress } from "../abis/contarctAddress";
 import { Wallet } from "ethers";
 import { supabaseClient } from "../lib/supabaseClient";
-import "../styles/SignatureButton.css";
+
 
 interface Token {
   tokenAddress: string;
