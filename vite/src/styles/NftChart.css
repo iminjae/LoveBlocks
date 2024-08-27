@@ -1,0 +1,102 @@
+.nft-chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 100%;
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: #f5f5f5;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.nft-chart-empty {
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+}
+
+.nft-chart-blocks {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap; /* 여러 줄에 걸쳐 배치될 수 있도록 설정 */
+  gap: 10px;
+  transition: all 0.3s ease-in-out;
+}
+
+.lego-block {
+  width: 60px;
+  height: 80px;
+  border-radius: 8px;
+  position: relative;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  animation: slide-up 0.5s ease-in-out;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  margin-right: -8px;
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.lego-top {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 34px;
+  height: 20px;
+  background-color: inherit;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lego-stud {
+  width: 14px;
+  height: 14px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+}
+
+.lego-content {
+  position: absolute;
+  bottom: 10px;
+  width: 100%;
+  text-align: center;
+  color: #fff;
+  padding: 0 5px;
+  box-sizing: border-box;
+}
+
+.lego-token-image {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin-bottom: 5px;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+}
+
+.lego-token-symbol {
+  display: block;
+  font-weight: bold;
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.lego-token-amount {
+  display: block;
+  font-size: 10px;
+  opacity: 0.9;
+}

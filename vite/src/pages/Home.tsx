@@ -4,12 +4,9 @@ import { OutletContext } from "../components/Layout";
 import axios from "axios";
 import { ethers } from "ethers";
 import { useTypewriter, Cursor } from "react-simple-typewriter";
-import silverCard from "../assets/silverCard.jpg";
 import background from "../assets/background.png";
 import { FaCoins, FaHandHoldingUsd } from "react-icons/fa";
 import { RiNftFill } from "react-icons/ri";
-import LegoBlock from "../components/LegoBlock";
-import ProcessStep from "../components/ProcessStep";
 import SignUpOrganization from "../components/SignUpOrganization";
 import ProcessSteps from "../components/ProcessSteps";
 
@@ -209,8 +206,7 @@ const Home: FC = () => {
             {showNext && (
               <div>
                 <p className="mt-7 text-2xl animate-fadeInMove">
-                  {" "}
-                  지금 바로 기부하세요{" "}
+                  지금 바로 기부하세요
                 </p>
 
                 {isButtonVisible ? (
