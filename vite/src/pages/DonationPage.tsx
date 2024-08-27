@@ -2,18 +2,17 @@ import { FC, useEffect, useRef, useState } from "react";
 import { useLocation, useOutletContext } from "react-router-dom";
 import SignatureButton from "../components/SignatureButton";
 import { OutletContext } from "../components/Layout";
-import silverCard from "../assets/silverCard.jpg";
 import commonCard from "../assets/common.jpeg";
-import black from "../assets/black.jpg";
+import logo from "../assets/logo.png";
 import { ethers } from "ethers";
 import { format, differenceInDays } from "date-fns";
 import "../styles/TokenCardAnimation.css";
 import "../styles/DonationModal.css";
 import mintNftAbi from "../abis/mintNftAbi.json";
 import { mintNftContractAddress } from "../abis/contarctAddress";
-import * as htmlToImage from 'html-to-image';
 import DonationModal from "../components/DonationCompleModal";
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import * as htmlToImage from 'html-to-image';
+import NftChart from "../components/NftChart";
 
 interface HoldToken {
   tokenAddress: string;
@@ -23,10 +22,12 @@ interface HoldToken {
   decimal: bigint;
   image: string;
 }
+
 interface TokenPrice {
   id: string;
   usd: string;
 }
+
 interface MergeToken {
   tokenAddress: string;
   amount: bigint;
@@ -45,34 +46,9 @@ const DonationPage: FC = () => {
   const [selectedTokens, setSelectedTokens] = useState<MergeToken[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDonationComplete, setIsDonationComplete] = useState(false);
-  const [progress, setProgress] = useState(0); // 진행률
-  const [mention, setMention] = useState(''); // 현재 단계에 맞는 메시지
+  const [progress, setProgress] = useState(0);
+  const [mention, setMention] = useState('');
 
-  const getRainbowColors = (numColors: number) => {
-    const colors = [];
-    for (let i = 0; i < numColors; i++) {
-      const hue = (i * 360 / numColors) % 360; // 0도에서 360도까지 색상을 생성
-      colors.push(`hsl(${hue}, 100%, 50%)`);
-    }
-    return colors;
-  };
-
-
-  const data = [
-    { name: 'Group A', value: 400 },
-    { name: 'Group B', value: 300 },
-    { name: 'Group C', value: 300 },
-    { name: 'Group D', value: 200 },
-    { name: 'Group D', value: 200 },
-    { name: 'Group D', value: 200 },
-    { name: 'Group D', value: 200 },
-    { name: 'Group D', value: 200 },
-  ];
-
-
-
-
-  const colors = getRainbowColors(data.length);
 
   const donationInfo = {
     title: "기부 제목",
@@ -106,20 +82,20 @@ const DonationPage: FC = () => {
   };
 
   const totalSelectedAmount = selectedTokens.reduce(
-    (total, token) => total + parseFloat((Number(ethers.formatUnits(token.amount,token.decimal))*Number(token.usd)).toFixed(2)),
+    (total, token) => total + parseFloat((Number(ethers.formatUnits(token.amount, token.decimal)) * Number(token.usd)).toFixed(2)),
     0
   );
 
   const onSignatureSuccess = async () => {
     console.log("Signature was successful!");
-    setProgress(33);  // 초기 진행률 설정
+    setProgress(33);
     setMention('NFT 생성 중...');
     await mintNft()
-    setProgress(66);  // 중간 진행률 설정
+    setProgress(66);
     setMention('NFT 업로드 중...');
 
     setIsLoading(false);
-    setProgress(100);  // 완료 시 진행률 설정
+    setProgress(100);
     setMention('기부 완료!');
     setIsDonationComplete(true);
   };
@@ -134,6 +110,7 @@ const DonationPage: FC = () => {
     );
 
     try {
+      // 이미지와 JSON을 IPFS에 업로드하고, NFT를 발행하는 코드
       const imgIPFS = await pinFileToIPFS();
       const jsonIPFS = await pinJsonToIPFS(imgIPFS);
       const response = await mintNftContract.mintNft("https://rose-top-beetle-859.mypinata.cloud/ipfs/" + jsonIPFS);
@@ -149,7 +126,7 @@ const DonationPage: FC = () => {
       return "";
     }
 
-    const dataUrl = await htmlToImage.toPng(chartContainerRef.current, { backgroundColor: 'black' });
+    const dataUrl = await htmlToImage.toPng(chartContainerRef.current, { backgroundColor: 'white' });
     const blob = await (await fetch(dataUrl)).blob();
 
     try {
@@ -235,23 +212,20 @@ const DonationPage: FC = () => {
   };
 
   useEffect(() => {
-    const mergedTokens = holdTokens.map((token:HoldToken) => {
-      // 모든 가격 데이터에서 토큰의 symbol과 매칭되는 id를 찾음
-      const matchingPrice = tokenPrice.find((price:TokenPrice) => {
-          // symbol과 id를 비교할 때, 소문자로 변환하여 비교
-          return price.id.includes(token.symbol.toLowerCase());
+    const mergedTokens = holdTokens.map((token: HoldToken) => {
+      const matchingPrice = tokenPrice.find((price: TokenPrice) => {
+        return price.id.includes(token.symbol.toLowerCase());
       });
-  
-      // 토큰 객체에 가격을 추가하여 반환
+
       return {
-          ...token,
-          usd: matchingPrice ? matchingPrice.usd : null
+        ...token,
+        usd: matchingPrice ? matchingPrice.usd : null
       };
-  });
-  
-  setMergeTokens(mergedTokens);
-  }, [tokenPrice])
-  
+    });
+
+    setMergeTokens(mergedTokens);
+  }, [tokenPrice]);
+
   return (
     <div className={`min-h-screen flex flex-col font-sans ${isLoading ? 'opacity-50' : ''}`}>
       <main className="flex-grow">
@@ -302,7 +276,7 @@ const DonationPage: FC = () => {
               </div>
             </div>
 
-            {/* 토큰 목록 */} 
+            {/* 토큰 목록 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-60">
               {mergeTokens! ? (
                 mergeTokens!.map((token: MergeToken) => (
@@ -316,7 +290,7 @@ const DonationPage: FC = () => {
                       : "border border-gray-200"
                       }`}
                     style={{
-                      backgroundImage: `url(${silverCard})`,
+                      // backgroundImage: `url(${silverCard})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                       backgroundRepeat: "no-repeat",
@@ -333,7 +307,7 @@ const DonationPage: FC = () => {
                       {token.symbol.toUpperCase()}
                     </h3>
                     <p className="mt-2 text-gray-600">
-                      잔액: {(Number(ethers.formatUnits(token.amount,token.decimal))*Number(token.usd)).toFixed(2)}$
+                      잔액: {(Number(ethers.formatUnits(token.amount, token.decimal)) * Number(token.usd)).toFixed(2)}$
                     </p>
                   </div>
                 ))
@@ -342,44 +316,21 @@ const DonationPage: FC = () => {
                   보유한 토큰이 없습니다.
                 </p>
               )}
-              
             </div>
           </div>
 
           <div className="fixed bottom-0 left-0 w-full bg-white shadow-lg py-4 px-6 flex justify-between items-center space-x-4 border-t border-gray-200">
             {/* 왼쪽: 그래프 */}
-            <div className="w-2/5 flex justify-center items-center h-60">
+            <div ref={chartContainerRef} className="w-2/5 flex flex-col justify-between items-center h-60 relative rounded-md bg-gray-700">
+              {/* 로고와 텍스트 */}
+              <div className="absolute top-0 left-0 flex items-center space-x-2 p-2">
+                <img src={logo} alt="LoveBlocks Logo" className="h-5 w-5" />
+                <span className="text-sm font-bold text-gray-100">LOVEBLOCKS</span> {/* 텍스트 색상도 어두운 배경에 맞게 변경 */}
+              </div>
+
               {/* 명함 크기의 그래프 자리 */}
-              <div
-                ref={chartContainerRef}
-                className="w-[450px] h-[230px] bg-gray-100 flex justify-center items-center"
-                style={{
-                  backgroundImage: `url(${black})`,
-                  backgroundSize: 'cover',  // 배경 이미지를 요소에 꽉 차게 조정
-                  backgroundPosition: 'center',  // 이미지가 중앙에 위치하도록 설정
-                  // backgroundRepeat: 'no-repeat'  // 배경 이미지 반복 방지
-                }}
-              >
-                <ResponsiveContainer>
-                  <PieChart>
-                    <Pie
-                      data={data}
-                      cx="50%"
-                      cy="50%"
-                      startAngle={180}
-                      endAngle={0}
-                      innerRadius={30}
-                      outerRadius={50}
-                      fill="#8884d8"
-                      paddingAngle={0}
-                      dataKey="value"
-                    >
-                      {data.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={colors[index]} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="flex-grow flex items-end justify-center w-full mb-4">
+                <NftChart tokens={selectedTokens} />
               </div>
             </div>
 
@@ -397,7 +348,7 @@ const DonationPage: FC = () => {
                       alt={token.name}
                     />
                     <span className="text-sm font-medium text-gray-800">
-                      {token.symbol.toUpperCase()}: {(Number(ethers.formatUnits(token.amount,token.decimal))*Number(token.usd)).toFixed(2)}$
+                      {token.symbol.toUpperCase()}: {(Number(ethers.formatUnits(token.amount, token.decimal)) * Number(token.usd)).toFixed(2)}$
                     </span>
                   </div>
                 ))}
@@ -412,8 +363,8 @@ const DonationPage: FC = () => {
                   adminSigner={adminSigner}
                   onSuccess={onSignatureSuccess}
                   setLoading={setIsLoading}
-                  setProgress={setProgress} // 진행률 업데이트 함수 전달
-                  setMention={setMention}   // 메시지 업데이트 함수 전달
+                  setProgress={setProgress}
+                  setMention={setMention}
                 ></SignatureButton>
               </div>
             </div>
@@ -425,13 +376,13 @@ const DonationPage: FC = () => {
       {isDonationComplete && (
         <DonationModal
           onClose={() => setIsDonationComplete(false)}
-          className="z-60"  // 모달이 가장 위에 표시되도록 z-index를 높게 설정
+          className="z-60"
         />
       )}
 
       {isLoading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96 h-25">  {/* 창 크기 고정 */}
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96 h-25">
             <div className="text-center mb-4">
               <h2 className="text-xl font-bold">{mention}</h2>
               <p>진행률: {progress}%</p>
