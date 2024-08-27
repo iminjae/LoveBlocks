@@ -14,7 +14,7 @@ interface Organization {
 }
 
 const OrganizationMyPage: FC = () => {
-  const { signer, adminSigner } = useOutletContext<OutletContext>();
+  const { signer, adminSigner, contract } = useOutletContext<OutletContext>();
 
   const [donationContract, setDonationContract] = useState<Contract>();
   const [organization, setOrganization] = useState<Organization | null>(null);
@@ -68,6 +68,9 @@ const OrganizationMyPage: FC = () => {
           {organization.orgAddr === signer!.address ? (
             <OrganizationMypageComp
               projectInfo={organization}
+              signer={signer}
+              adminSigner={adminSigner}
+              contract={contract}
             ></OrganizationMypageComp>
           ) : (
             <OrganizationFail></OrganizationFail>

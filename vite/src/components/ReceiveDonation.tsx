@@ -2,6 +2,7 @@ import { ethers, JsonRpcSigner } from "ethers";
 import { FC, useEffect, useState } from "react";
 import { Contract } from "ethers";
 import { Wallet } from "ethers";
+import axios from "axios";
 
 interface ReceiveDonationProps {
   signer: JsonRpcSigner | null;
@@ -57,13 +58,12 @@ const ReceiveDonation: FC<ReceiveDonationProps> = ({
   const getConfirmations = async () => {
     //제일 마지막 tx를 가져오는거긴한데, 애초에 수령 신청하고 승인 안된 상태면 클릭 못하게 막아야할듯
     const txId = await multiSigWalletContract!.transactionCount();
-    const res3 = await multiSigWalletContract!.transactions(txId - 1n);
+    const res3 = await multiSigWalletContract!.transactions(txId);
     const res = await multiSigWalletContract!.confirmations(
       txId - 1n,
       signer?.address
     );
     console.log("RESPONSE ", txId - 1n, res);
-    console.log("RESONPSE 2", txId);
     console.log("RESONPSE 3", res3);
 
     //admin이 confirm 진행
@@ -98,7 +98,14 @@ const ReceiveDonation: FC<ReceiveDonationProps> = ({
   };
 
   const recevieDonation = async () => {
-    const amount = ethers.parseUnits("0.01", 6); //기부 contract에서 영수증 인증된 금액 가져와야함
+    const response = await axios.get(
+      "https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=krw"
+    );
+    console.log(response.data.tether.krw);
+
+    //donation컨트랙트의 usedDonation메서드 호출 -> 누적된 사용금액(원화) -> 값 / response.data.tether.krw -> 테더량
+
+    const amount = ethers.parseUnits("0.02", 6); //기부 contract에서 영수증 인증된 금액 가져와야함
     const encodeData = usdtContract?.interface.encodeFunctionData("transfer", [
       signer?.address,
       amount,

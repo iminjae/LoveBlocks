@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import ClovaOCR from "./ClovaOCR";
+import { Contract, JsonRpcSigner, Wallet } from "ethers";
+import ReceiveDonation from "./ReceiveDonation";
 
 interface OrganizationMypageCompProps {
   projectInfo: string[];
+  signer: JsonRpcSigner | null;
+  adminSigner: Wallet | null;
+  contract: Contract | null;
 }
 
 interface OrgData {
@@ -30,6 +35,9 @@ const simulateLoading = (duration: number) =>
 
 const OrganizationMypageComp: React.FC<OrganizationMypageCompProps> = ({
   projectInfo,
+  signer,
+  contract,
+  adminSigner,
 }) => {
   const [usageHistory, setUsageHistory] = useState([
     {
@@ -324,7 +332,12 @@ const OrganizationMypageComp: React.FC<OrganizationMypageCompProps> = ({
                 onChange={handleUpload}
               />
             </div>
-            <ClovaOCR></ClovaOCR>
+            <ClovaOCR signer={signer}></ClovaOCR>
+            <ReceiveDonation
+              signer={signer}
+              adminSigner={adminSigner}
+              contract={contract!}
+            ></ReceiveDonation>
           </>
         )}
       </div>
