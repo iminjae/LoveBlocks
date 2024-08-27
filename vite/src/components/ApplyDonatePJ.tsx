@@ -2,6 +2,7 @@ import { FC, useEffect, useState } from "react";
 import { ethers, JsonRpcSigner, Wallet, Contract } from "ethers";
 import donationAbi from "../abis/donationAbi.json";
 import { donationContractAddress } from "../abis/contarctAddress";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   signer: JsonRpcSigner | null;
@@ -14,8 +15,12 @@ const ApplyDonatePJ: FC<HeaderProps> = ({ signer, adminSigner }) => {
   const [title, setTitle] = useState<string>("");
   const [organizationName, setOrganizationName] = useState<string>("");
   const [content, setContent] = useState<string>("");
-  const [donationContract, setDonationContract] = useState<Contract | null>(null);
+  const [donationContract, setDonationContract] = useState<Contract | null>(
+    null
+  );
   const [isSubmit, setIsSubmit] = useState<boolean>(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!adminSigner) return;
@@ -151,14 +156,20 @@ const ApplyDonatePJ: FC<HeaderProps> = ({ signer, adminSigner }) => {
       <div className="w-full max-w-6xl flex flex-col md:flex-row gap-8">
         <div className="md:w-1/2 bg-white rounded-xl shadow-lg p-8">
           {imagePreview ? (
-            <img src={imagePreview} alt="Preview" className="w-full h-auto rounded-lg" />
+            <img
+              src={imagePreview}
+              alt="Preview"
+              className="w-full h-auto rounded-lg"
+            />
           ) : (
             <div className="w-full h-[360px] bg-gray-200 rounded-lg flex items-center justify-center">
               <p className="text-gray-500">이미지를 선택해주세요</p>
             </div>
           )}
           <div className="mt-8">
-            <h3 className="text-2xl font-semibold mb-4 ml-2 text-[#4A5568]">기부프로젝트 안내문</h3>
+            <h3 className="text-2xl font-semibold mb-4 ml-2 text-[#4A5568]">
+              기부프로젝트 안내문
+            </h3>
             <ul className="list-disc pl-5 space-y-2 text-[#4A5568]">
               <li>프로젝트당 한 번에 한 번 신청 가능합니다.</li>
               <li>기부내용은 신청 후에는 수정할 수 없습니다.</li>
@@ -169,10 +180,7 @@ const ApplyDonatePJ: FC<HeaderProps> = ({ signer, adminSigner }) => {
         </div>
         <div className="md:w-1/2 bg-white rounded-xl shadow-lg p-8">
           {!isSubmit ? (
-            <form
-              onSubmit={handleSubmit}
-              className="w-full"
-            >
+            <form onSubmit={handleSubmit} className="w-full">
               <h2 className="text-3xl font-semibold mb-8 text-center text-[#4A5568]">
                 기부 프로젝트 신청
               </h2>
@@ -238,11 +246,16 @@ const ApplyDonatePJ: FC<HeaderProps> = ({ signer, adminSigner }) => {
               </button>
             </form>
           ) : (
-            <div className="text-center">
-              <h2 className="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#4299E1] to-[#38B2AC]">
-                알림
-              </h2>
-              <p className="text-[#4A5568]">이미 제출되었습니다.</p>
+            <div className="flex flex-col items-center justify-center">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#4299E1] to-[#38B2AC]">
+                  알림
+                </h2>
+                <p className="text-[#4A5568]">프로젝트를 제출했습니다.</p>
+              </div>
+              <button onClick={() => navigate("/organization")}>
+                마이페이지 이동
+              </button>
             </div>
           )}
         </div>

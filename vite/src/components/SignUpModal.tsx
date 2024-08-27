@@ -1,5 +1,6 @@
 import { Contract, JsonRpcSigner, Wallet } from "ethers";
-import React, { Dispatch, FC, SetStateAction } from "react";
+import { Dispatch, FC, SetStateAction, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface SafeAccountModalProps {
   isOpen: boolean;
@@ -22,8 +23,11 @@ const SignUpModal: FC<SafeAccountModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  const navigate = useNavigate();
   const onClickCreateMultiSig = async () => {
-    await contract!.create([signer, adminSigner], 2);
+    const data = await contract!.create([signer, adminSigner], 2);
+    console.log("DATA", data);
+    navigate("/")
     onClose();
   };
 

@@ -1,2 +1,2 @@
-export const donationContractAddress = "0xf10227Ca4C9ad1fd4b5215A27aF2D748Fda36b2b"; //기부 컨트랙트 주소
-export const mintNftContractAddress = "0x91672E1Fc9eC83B1c70b7a6aaA39a417Cc3004E4"; //nft 컨트랙트 주소
+export const donationContractAddress = "0x5a5ddd99602000288620f2fe6af96BB7136Df376"; //기부 컨트랙트 주소
+export const mintNftContractAddress = "0x6Ecd00Ea0eDd9d7Bdb19cd52fA2cE5a44C8aa3C2"; //nft 컨트랙트 주소

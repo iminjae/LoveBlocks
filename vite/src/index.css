@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+*{
+    
+}
+
 /* src/index.css 또는 다른 글로벌 CSS 파일 */
 @font-face {
     font-family: 'LINESeedKR-Bd';

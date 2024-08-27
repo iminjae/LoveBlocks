@@ -1,6 +1,14 @@
-import { FC } from "react";
+import { FC, useEffect, useState } from "react";
+import SignUpModal from "./SignUpModal";
+import { Contract, ethers, JsonRpcSigner, Wallet } from "ethers";
+import multisigFactoryAbi from "../abis/multisigFactoryAbi.json";
 
-const SignUpOrganization: FC = () => {
+interface HeaderProps {
+  signer: JsonRpcSigner | null;
+  adminSigner: Wallet | null;
+}
+
+const SignUpOrganization: FC<HeaderProps> = ({ signer, adminSigner }) => {
   const coins = [
     {
       name: "ETH",
@@ -90,6 +98,18 @@ const SignUpOrganization: FC = () => {
   const innerCoins = coins.slice(0, 6);
   const outerCoins = coins.slice(7, 22);
 
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [name, setName] = useState<string>("");
+  const [contract, setContract] = useState<Contract>();
+
+  useEffect(() => {
+    if (!signer) return;
+    const addr = "0xc76666A1db180F311B16C71Af947D5fF4803b4d3"; //multisig Factory Contract Address
+    const abi = multisigFactoryAbi;
+    const contract = new ethers.Contract(addr, abi, signer); // multisig Factory contract
+    setContract(contract);
+  }, [signer]);
+
   return (
     <div className="flex items-center justify-between p-8 bg-gradient-to-r from-blue-50 h-[640px] to-purple-50 pl-20">
       {/* 왼쪽 텍스트 영역 */}
@@ -109,9 +129,25 @@ const SignUpOrganization: FC = () => {
           <br />
           블록체인의 가능성을 확장해 나가는 우리의 여정에 함께해 보세요.
         </p>
-        <button className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition duration-300">
-          기부 단체 신청 →
-        </button>
+        {signer && (
+          <>
+            <button
+              className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition duration-300"
+              onClick={() => setModalOpen(true)}
+            >
+              기부 단체 신청 →
+            </button>
+            <SignUpModal
+              isOpen={isModalOpen}
+              onClose={() => setModalOpen(false)}
+              signer={signer!}
+              adminSigner={adminSigner}
+              name={name}
+              setName={setName}
+              contract={contract!}
+            />
+          </>
+        )}
       </div>
 
       {/* 오른쪽 원형 그라데이션 섹션 */}

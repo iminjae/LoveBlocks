@@ -13,7 +13,6 @@ import { mintNftContractAddress } from "../abis/contarctAddress";
 import DonationModal from "../components/DonationCompleModal";
 import * as htmlToImage from "html-to-image";
 import NftChart from "../components/NftChart";
-import authImage from "../assets/LoveblocksPrivy.png";
 
 interface HoldToken {
   tokenAddress: string;
@@ -98,14 +97,9 @@ const DonationPage: FC = () => {
 
   const onSignatureSuccess = async () => {
     console.log("Signature was successful!");
-    setProgress(33);
-    setMention("NFT 생성 중...");
     await mintNft();
-    setProgress(66);
-    setMention("NFT 업로드 중...");
 
     setIsLoading(false);
-    setProgress(100);
     setMention("기부 완료!");
     setIsDonationComplete(true);
   };
@@ -123,8 +117,10 @@ const DonationPage: FC = () => {
       // 이미지와 JSON을 IPFS에 업로드하고, NFT를 발행하는 코드
       const imgIPFS = await pinFileToIPFS();
       const jsonIPFS = await pinJsonToIPFS(imgIPFS);
+      console.log("jsonIPFS", jsonIPFS);
       const response = await mintNftContract.mintNft(
-        "https://rose-top-beetle-859.mypinata.cloud/ipfs/" + jsonIPFS
+        "https://rose-top-beetle-859.mypinata.cloud/ipfs/" + jsonIPFS,
+        signer!.address
       );
       await response.wait();
     } catch (error) {
@@ -243,6 +239,11 @@ const DonationPage: FC = () => {
 
     setMergeTokens(mergedTokens);
   }, [tokenPrice]);
+
+  useEffect(() => {
+    if (!signer) return;
+    console.log("signer", signer);
+  }, [signer]);
 
   return (
     <div
@@ -417,26 +418,6 @@ const DonationPage: FC = () => {
             </div>
           </div>
         </section>
-        <div className="container mx-auto px-4 py-8">
-          <section className="flex flex-col md:flex-row items-center justify-between">
-            <div className="w-full md:w-1/2 mb-8 md:mb-0 flex justify-center">
-              <img
-                src={authImage}
-                alt="Auth Compatibility"
-                className="w-[50%]"
-              />
-            </div>
-            <div className="w-full md:w-1/2 md:pl-8">
-              <h2 className="text-3xl font-semibold text-blue-700 mb-4">
-                간단하게 지갑만 연동하세요
-              </h2>
-              <p className="text-gray-600">
-                수수료없이 지갑들에 숨어있는 작은코인들이 모여서 LOVEBLOCKS를
-                만들어갑니다
-              </p>
-            </div>
-          </section>
-        </div>
       </main>
 
       {isDonationComplete && (

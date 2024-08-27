@@ -108,6 +108,19 @@
   {
     "inputs": [
       {
+        "internalType": "string[]",
+        "name": "_receipts",
+        "type": "string[]"
+      }
+    ],
+    "name": "setReceipts",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "components": [
           {
             "internalType": "address",
@@ -283,6 +296,19 @@
         "internalType": "struct Donation.Organization[]",
         "name": "",
         "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getReceipts",
+    "outputs": [
+      {
+        "internalType": "string[]",
+        "name": "",
+        "type": "string[]"
       }
     ],
     "stateMutability": "view",

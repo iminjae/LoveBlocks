@@ -9,6 +9,8 @@ import { FaCoins, FaHandHoldingUsd } from "react-icons/fa";
 import { RiNftFill } from "react-icons/ri";
 import SignUpOrganization from "../components/SignUpOrganization";
 import ProcessSteps from "../components/ProcessSteps";
+import PartnerSlider from "../components/PartnerSlider";
+import authImage from "../assets/LoveblocksPrivy.png";
 
 interface TokenCoinGecko {
   id: string;
@@ -34,7 +36,7 @@ interface TokenPrice {
 const Home: FC = () => {
   const navigate = useNavigate();
 
-  const { signer } = useOutletContext<OutletContext>();
+  const { signer, adminSigner } = useOutletContext<OutletContext>();
 
   const [tokenInfos, setTokenInfos] = useState<TokenCoinGecko[]>([]);
   const [tokenAddrs, setTokenAddrs] = useState<TokenCoinGecko[]>([]);
@@ -187,7 +189,7 @@ const Home: FC = () => {
   }, [holdTokens]);
 
   return (
-    <div className="min-h-screen bg-toss-light flex flex-col font-sans bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 ">
+    <div className="min-h-screen bg-white flex flex-col font-sans">
       {/* Hero Section */}
       <main className="flex-grow ">
         <section className="text-toss-dark py-24 text-center relative">
@@ -230,7 +232,7 @@ const Home: FC = () => {
                         holdTokens.map((token) => (
                           <div
                             key={token.tokenAddress}
-                            className="p-6 rounded-lg shadow-md text-center w-40"
+                            className="p-6 rounded-lg shadow-md text-center w-40 bg-white bg-opacity-70"
                             style={{
                               backgroundSize: "cover",
                               backgroundPosition: "center",
@@ -275,6 +277,27 @@ const Home: FC = () => {
             )}
           </div>
         </section>
+
+        <div className="container mx-auto px-4 pt-20 pb-10 bg-white ">
+          <section className="flex flex-col md:flex-row items-center justify-between">
+            <div className="w-full md:w-1/2 mb-8 md:mb-0 flex justify-center">
+              <img
+                src={authImage}
+                alt="Auth Compatibility"
+                className="w-[50%]"
+              />
+            </div>
+            <div className="w-full md:w-1/2 md:pl-8">
+              <h2 className="text-3xl font-semibold text-blue-700 mb-4">
+                간단하게 지갑만 연동하세요
+              </h2>
+              <p className="text-gray-600">
+                수수료없이 지갑들에 숨어있는 작은코인들이 모여서 LOVEBLOCKS를
+                만들어갑니다
+              </p>
+            </div>
+          </section>
+        </div>
 
         {/* Features Section */}
         <section id="features" className="py-28 bg-white h-[560px]">
@@ -323,7 +346,11 @@ const Home: FC = () => {
           <ProcessSteps />
         </div>
 
-        <SignUpOrganization></SignUpOrganization>
+        <SignUpOrganization
+          signer={signer}
+          adminSigner={adminSigner}
+        ></SignUpOrganization>
+        <PartnerSlider></PartnerSlider>
       </main>
     </div>
   );

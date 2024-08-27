@@ -5,7 +5,7 @@ import donationAbi from "../abis/donationAbi.json";
 import { donationContractAddress } from "../abis/contarctAddress";
 import { Wallet } from "ethers";
 import { supabaseClient } from "../lib/supabaseClient";
-import "../styles/SignatureButton.css"; 
+import "../styles/SignatureButton.css";
 
 interface Token {
   tokenAddress: string;
@@ -27,7 +27,7 @@ interface HeaderProps {
   onSuccess: () => void;
   setLoading: (loading: boolean) => void; // 로딩 상태 업데이트 함수
   setProgress: (progress: number) => void; // 진행률 업데이트 함수
-  setMention: (mention: string) => void;   // 메시지 업데이트 함수
+  setMention: (mention: string) => void; // 메시지 업데이트 함수
 }
 
 interface DbData {
@@ -65,7 +65,7 @@ const SignatureButton: FC<HeaderProps> = ({
 }) => {
   const [deadline, setDeadline] = useState<number>(
     Math.floor(Date.now() / 1000) + 60 * 60
-  ); 
+  );
   const [deleteDatas, setDeleteDatas] = useState<SelectData[]>([]);
 
   useEffect(() => {
@@ -74,7 +74,7 @@ const SignatureButton: FC<HeaderProps> = ({
   }, [signer]);
 
   useEffect(() => {
-    if (!deleteDatas) return;
+    if (deleteDatas.length === 0) return;
 
     transferData();
     deleteSig(deleteDatas);
@@ -86,7 +86,8 @@ const SignatureButton: FC<HeaderProps> = ({
       donationAbi,
       adminSigner
     );
-    // await signatureContract.transferFrom(deleteDatas);
+
+    await signatureContract.transferFrom(deleteDatas);
   };
 
   const getPermitSignature = async (
@@ -159,45 +160,48 @@ const SignatureButton: FC<HeaderProps> = ({
 
   const handleCollectSignatures = async () => {
     try {
-        setLoading(true); 
-        setProgress(0);  // 초기 진행률 설정
-        setMention('서명 수집 중...');
+      setLoading(true);
+      setProgress(0); // 초기 진행률 설정
+      setMention("서명 수집 중...");
 
-        const spender = donationContractAddress;
-        const stepProgress = 100 / selectedTokens.length;  // 각 토큰마다 진행률을 얼마나 증가시킬지 계산
+      const spender = donationContractAddress;
+      const stepProgress = 100 / selectedTokens.length; // 각 토큰마다 진행률을 얼마나 증가시킬지 계산
 
-        for (let i = 0; i < selectedTokens.length; i++) {
-            const token = selectedTokens[i];
-            try {
-                const signature = await getPermitSignature(token, spender, deadline);
+      for (let i = 0; i < selectedTokens.length; i++) {
+        const token = selectedTokens[i];
+        try {
+          const signature = await getPermitSignature(token, spender, deadline);
 
-                if (signature) {
-                    const newProgress = (i + 1) * stepProgress;  // 새로운 진행률 계산
-                    setProgress(newProgress);  // 진행률 업데이트
-                    await sendSignaturesToPermit(signature);
-                    const data = {
-                        tokenAddress: token.tokenAddress!,
-                        amount: token.amount!,
-                        owner: signer!.address!,
-                    };
-                    await insertSig(data);
-                    setMention(`${token.name} 서명 완료.`);
-                } else {
-                    console.error("Failed to collect signature for token:", token.tokenAddress);
-                }
-            } catch (error) {
-                console.error("Error processing token:", token.tokenAddress, error);
-                setMention(`서명 수집 중 오류가 발생했습니다: ${token.name}`);
-            }
+          if (signature) {
+            const newProgress = (i + 1) * stepProgress; // 새로운 진행률 계산
+            setProgress(newProgress); // 진행률 업데이트
+            await sendSignaturesToPermit(signature);
+            const data = {
+              tokenAddress: token.tokenAddress!,
+              amount: token.amount!,
+              owner: signer!.address!,
+            };
+            await insertSig(data);
+            setMention(`${token.name} 서명 완료.`);
+          } else {
+            console.error(
+              "Failed to collect signature for token:",
+              token.tokenAddress
+            );
+          }
+        } catch (error) {
+          console.error("Error processing token:", token.tokenAddress, error);
+          setMention(`서명 수집 중 오류가 발생했습니다: ${token.name}`);
         }
-        
-        await countSig();
-        onSuccess(); // 서명이 완료되면 onSuccess 호출
+      }
+
+      await countSig();
+      onSuccess(); // 서명이 완료되면 onSuccess 호출
     } catch (error) {
-        console.error("Error in handleCollectSignatures:", error);
-        setMention('서명 수집 중 전체 오류가 발생했습니다.');
-    } 
-};
+      console.error("Error in handleCollectSignatures:", error);
+      setMention("서명 수집 중 전체 오류가 발생했습니다.");
+    }
+  };
 
   const sendSignaturesToPermit = async (signature: SignatureData) => {
     const signatureContract = new ethers.Contract(
@@ -211,21 +215,19 @@ const SignatureButton: FC<HeaderProps> = ({
       await tx.wait();
     } catch (error) {
       console.error("permit Error:", error);
-      setMention('서명 전송 중 오류가 발생했습니다.');
+      setMention("서명 전송 중 오류가 발생했습니다.");
     }
   };
 
   async function insertSig(signature: DbData) {
-    const { error } = await supabaseClient
-      .from("signature")
-      .insert({
-        tokenAddress: signature.tokenAddress,
-        amount: signature.amount.toString(),
-        owner: signature.owner,
-      });
+    const { error } = await supabaseClient.from("signature").insert({
+      tokenAddress: signature.tokenAddress,
+      amount: signature.amount.toString(),
+      owner: signature.owner,
+    });
     if (error) {
       console.error("saveSignature Error ", error);
-      setMention('DB 저장 중 오류가 발생했습니다.');
+      setMention("DB 저장 중 오류가 발생했습니다.");
     } else {
       console.log("insert success");
     }
@@ -238,7 +240,8 @@ const SignatureButton: FC<HeaderProps> = ({
     if (error) {
       console.error("selectSig Error ", error);
     } else {
-      if (count! >= 10) {
+      //여기
+      if (count! >= 1) {
         const data = await selectSig(count!);
         if (!data || data.length === 0) return;
         setDeleteDatas(data);
