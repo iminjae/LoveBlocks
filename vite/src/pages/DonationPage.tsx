@@ -2,10 +2,8 @@ import { FC, useEffect, useRef, useState } from "react";
 import { useLocation, useOutletContext } from "react-router-dom";
 import SignatureButton from "../components/SignatureButton";
 import { OutletContext } from "../components/Layout";
-import commonCard from "../assets/common.jpeg";
 import logo from "../assets/logo.png";
 import { ethers } from "ethers";
-import { format, differenceInDays } from "date-fns";
 import "../styles/TokenCardAnimation.css";
 import "../styles/DonationModal.css";
 import mintNftAbi from "../abis/mintNftAbi.json";
@@ -60,23 +58,6 @@ const DonationPage: FC = () => {
   const [progress, setProgress] = useState(0);
   const [mention, setMention] = useState("");
   const [donationInfo, setDonationInfo] = useState<DonationInfo>()
-  const [title, setTitle] = useState<string>("");
-
-  // const donationInfo = {
-  //   title: "기부 제목",
-  //   organizationName: "기부 단체 이름",
-  //   description:
-  //     "이 글은 기부의 목적과 기부금의 사용처에 대한 내용을 담고 있습니다. 기부해주신 분들께 깊이 감사드립니다.",
-  //   totalAmount: "100 ETH",
-  //   totalDonors: 50,
-  //   startDate: new Date(2024, 7, 1),
-  //   endDate: new Date(2024, 8, 30),
-  // };
-
-  const today = new Date();
-  // const dDay = differenceInDays(donationInfo.endDate, today);
-  // const formattedStartDate = format(donationInfo.startDate, "yyyy-MM-dd");
-  // const formattedEndDate = format(donationInfo.endDate, "yyyy-MM-dd");
 
   const toggleTokenSelection = (token: MergeToken) => {
     setSelectedTokens((prevSelectedTokens) => {
@@ -128,7 +109,7 @@ const DonationPage: FC = () => {
     try {
       const imgIPFS = await pinFileToIPFS();
       const jsonIPFS = await pinJsonToIPFS(imgIPFS);
-      console.log("jsonIPFS", jsonIPFS);
+
       const response = await mintNftContract.mintNft(
         "https://rose-top-beetle-859.mypinata.cloud/ipfs/" + jsonIPFS,
         signer!.address
@@ -267,7 +248,7 @@ const DonationPage: FC = () => {
         throw new Error('Failed to fetch JSON from IPFS');
       }
       const data: DonationInfo = await response.json();
-      console.log(data);
+
       return data;
     } catch (error) {
       console.error('Error fetching JSON from IPFS:', error);
@@ -301,7 +282,7 @@ const DonationPage: FC = () => {
 
   useEffect(() => {
     getDonationInfo();
-    console.log(donationInfo);
+
   }, []);
 
   return (
