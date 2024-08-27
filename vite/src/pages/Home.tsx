@@ -198,7 +198,7 @@ const Home: FC = () => {
 
             {showNext && (
               <>
-                <p className="mt-7 text-2xl animate-fadeInMove"> 지금 바로 기부하세요 </p>
+                {/* <p className="mt-7 text-2xl animate-fadeInMove"> 지금 바로 기부하세요 </p> */}
                
                 {isButtonVisible ? (
                   <div>

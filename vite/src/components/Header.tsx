@@ -41,6 +41,12 @@ const Header: FC<HeaderProps> = ({ signer, setSigner, setProvider }) => {
           </button>
           <button
             className="text-toss-gray hover:text-toss-blue"
+            onClick={() => navigate("/mypage")}
+          >
+            마이페이지
+          </button>
+          <button
+            className="text-toss-gray hover:text-toss-blue"
             onClick={() => navigate("/signup")}
           >
             현용
