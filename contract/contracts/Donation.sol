@@ -58,6 +58,7 @@ contract Donation is TokenSwap {
 
     Organization[] projectList;
     Organization selectedCharity;
+    mapping(address => string[]) receipts;
 
     //서명 받은거 permit처리 (approve)
     function permit(SignatureData calldata signature) external {
@@ -157,5 +158,23 @@ contract Donation is TokenSwap {
 
     function getSelectedCharity() public view returns (Organization memory) {
         return selectedCharity;
+    }
+
+    function setReceipts(string[] memory _receipts) public {
+        uint len = receipts[msg.sender].length;
+        uint inputLen = _receipts.length;
+        string[] memory temp = new string[](len + inputLen);
+        for (uint i = 0; i < len; i++) {
+            temp[i] = receipts[msg.sender][i];
+        }
+        for (uint i = len; i < len + inputLen; i++) {
+            temp[i] = _receipts[i - len];
+        }
+        delete receipts[msg.sender];
+        receipts[msg.sender] = temp;
+    }
+
+    function getReceipts() public view returns (string[] memory) {
+        return receipts[msg.sender];
     }
 }
