@@ -1,45 +1,116 @@
-import { FC } from 'react';
+import { FC } from "react";
 
 const SignUpOrganization: FC = () => {
   const coins = [
-    { name: 'ETH', logoUrl: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
-    { name: 'USDT', logoUrl: 'https://cryptologos.cc/logos/tether-usdt-logo.png' },
-    { name: 'USDC', logoUrl: 'https://cryptologos.cc/logos/usd-coin-usdc-logo.png' },
-    { name: 'MAGIC', logoUrl: 'https://assets.coingecko.com/coins/images/18623/small/magic.png' },
-    { name: 'COMP', logoUrl: 'https://cryptologos.cc/logos/compound-comp-logo.png' },
-    { name: 'SUSHI', logoUrl: 'https://cryptologos.cc/logos/sushiswap-sushi-logo.png' },
-    { name: 'ARB', logoUrl: 'https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg' },
-    { name: 'CRV', logoUrl: 'https://cryptologos.cc/logos/curve-dao-token-crv-logo.png' },
-    { name: 'LDO', logoUrl: 'https://assets.coingecko.com/coins/images/13573/small/Lido_DAO.png' },
-    { name: 'PEPE', logoUrl: 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg' },
-    { name: 'PENDLE', logoUrl: 'https://assets.coingecko.com/coins/images/15069/small/Pendle_Logo_Normal-03.png' },
-    { name: 'GMX', logoUrl: 'https://assets.coingecko.com/coins/images/18323/small/arbit.png' },
-    { name: 'YFI', logoUrl: 'https://cryptologos.cc/logos/yearn-finance-yfi-logo.png' },
-    { name: 'UNI', logoUrl: 'https://cryptologos.cc/logos/uniswap-uni-logo.png' },
-    { name: 'BONK', logoUrl: 'https://assets.coingecko.com/coins/images/28600/small/bonk.jpg' },
-    { name: 'BAL', logoUrl: 'https://cryptologos.cc/logos/balancer-bal-logo.png' },
-    { name: 'GRT', logoUrl: 'https://cryptologos.cc/logos/the-graph-grt-logo.png' },
-    { name: 'MKR', logoUrl: 'https://cryptologos.cc/logos/maker-mkr-logo.png' },
-    { name: 'FRAX', logoUrl: 'https://cryptologos.cc/logos/frax-frax-logo.png' },
-    { name: 'GNO', logoUrl: 'https://cryptologos.cc/logos/gnosis-gno-gno-logo.png' },
+    {
+      name: "ETH",
+      logoUrl: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
+    },
+    {
+      name: "USDT",
+      logoUrl: "https://cryptologos.cc/logos/tether-usdt-logo.png",
+    },
+    {
+      name: "USDC",
+      logoUrl: "https://cryptologos.cc/logos/usd-coin-usdc-logo.png",
+    },
+    {
+      name: "MAGIC",
+      logoUrl:
+        "https://assets.coingecko.com/coins/images/18623/small/magic.png",
+    },
+    {
+      name: "COMP",
+      logoUrl: "https://cryptologos.cc/logos/compound-comp-logo.png",
+    },
+    {
+      name: "SUSHI",
+      logoUrl: "https://cryptologos.cc/logos/sushiswap-sushi-logo.png",
+    },
+    {
+      name: "ARB",
+      logoUrl:
+        "https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg",
+    },
+    {
+      name: "CRV",
+      logoUrl: "https://cryptologos.cc/logos/curve-dao-token-crv-logo.png",
+    },
+    {
+      name: "LDO",
+      logoUrl:
+        "https://assets.coingecko.com/coins/images/13573/small/Lido_DAO.png",
+    },
+    {
+      name: "PEPE",
+      logoUrl:
+        "https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg",
+    },
+    {
+      name: "PENDLE",
+      logoUrl:
+        "https://assets.coingecko.com/coins/images/15069/small/Pendle_Logo_Normal-03.png",
+    },
+    {
+      name: "GMX",
+      logoUrl:
+        "https://assets.coingecko.com/coins/images/18323/small/arbit.png",
+    },
+    {
+      name: "YFI",
+      logoUrl: "https://cryptologos.cc/logos/yearn-finance-yfi-logo.png",
+    },
+    {
+      name: "UNI",
+      logoUrl: "https://cryptologos.cc/logos/uniswap-uni-logo.png",
+    },
+    {
+      name: "BONK",
+      logoUrl: "https://assets.coingecko.com/coins/images/28600/small/bonk.jpg",
+    },
+    {
+      name: "BAL",
+      logoUrl: "https://cryptologos.cc/logos/balancer-bal-logo.png",
+    },
+    {
+      name: "GRT",
+      logoUrl: "https://cryptologos.cc/logos/the-graph-grt-logo.png",
+    },
+    { name: "MKR", logoUrl: "https://cryptologos.cc/logos/maker-mkr-logo.png" },
+    {
+      name: "FRAX",
+      logoUrl: "https://cryptologos.cc/logos/frax-frax-logo.png",
+    },
+    {
+      name: "GNO",
+      logoUrl: "https://cryptologos.cc/logos/gnosis-gno-gno-logo.png",
+    },
   ];
 
   const innerCoins = coins.slice(0, 6);
   const outerCoins = coins.slice(7, 22);
 
   return (
-    <div className="flex items-center justify-between p-8 bg-gradient-to-r from-blue-50 to-purple-50 min-h-screen pl-20">
+    <div className="flex items-center justify-between p-8 bg-gradient-to-r from-blue-50 h-[640px] to-purple-50 pl-20">
       {/* 왼쪽 텍스트 영역 */}
       <div className="max-w-lg">
-        <h2 className="text-xl font-bold text-blue-600 mb-2">지갑에 있는 잔액을 기부하세요</h2>
-        <h1 className="text-3xl font-bold mb-4">블록체인기부 생태계를 확장해 나가는<br />LOVEBLOCKS의 도전</h1>
+        <h2 className="text-xl font-bold text-blue-600 mb-2">
+          지갑에 있는 잔액을 기부하세요
+        </h2>
+        <h1 className="text-3xl font-bold mb-4">
+          블록체인기부 생태계를 확장해 나가는
+          <br />
+          LOVEBLOCKS의 도전
+        </h1>
         <p className="text-lg mb-6">
-          LOVEBLOCKS는 블록체인 생태계와 유기적으로 연동하여<br />
-          잔액들을 필요한 이웃에게 전달합니다.<br />
+          LOVEBLOCKS는 블록체인 생태계와 유기적으로 연동하여
+          <br />
+          잔액들을 필요한 이웃에게 전달합니다.
+          <br />
           블록체인의 가능성을 확장해 나가는 우리의 여정에 함께해 보세요.
         </p>
         <button className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition duration-300">
-          기부하러 가기 →
+          기부 단체 신청 →
         </button>
       </div>
 
@@ -75,7 +146,11 @@ const SignUpOrganization: FC = () => {
                     className="flex flex-col items-center justify-center"
                     style={{ transform: `rotate(-${angle}rad)` }}
                   >
-                    <img src={coin.logoUrl} alt={coin.name} className="w-6 h-6 object-contain" />
+                    <img
+                      src={coin.logoUrl}
+                      alt={coin.name}
+                      className="w-6 h-6 object-contain"
+                    />
                   </div>
                 </div>
               );
@@ -100,7 +175,11 @@ const SignUpOrganization: FC = () => {
                     className="flex flex-col items-center justify-center"
                     style={{ transform: `rotate(-${angle}rad)` }}
                   >
-                    <img src={coin.logoUrl} alt={coin.name} className="w-6 h-6 object-contain" />
+                    <img
+                      src={coin.logoUrl}
+                      alt={coin.name}
+                      className="w-6 h-6 object-contain"
+                    />
                   </div>
                 </div>
               );
@@ -110,7 +189,9 @@ const SignUpOrganization: FC = () => {
           {/* 중앙 로고 */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <h1 className="text-3xl font-bold mt-3 text-black-600 tracking-wider">LOVEBLOCKS</h1>
+              <h1 className="text-3xl font-bold mt-3 text-black-600 tracking-wider">
+                LOVEBLOCKS
+              </h1>
               <p className="text-xs text-gray-600 mt-2">Powered by Arbitrum</p>
             </div>
           </div>
@@ -118,6 +199,6 @@ const SignUpOrganization: FC = () => {
       </div>
     </div>
   );
-}
+};
 
 export default SignUpOrganization;
