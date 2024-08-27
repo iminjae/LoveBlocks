@@ -5,13 +5,14 @@ import { OutletContext } from "../components/Layout";
 import { donationContractAddress } from "../abis/contarctAddress";
 import donationAbi from "../abis/donationAbi.json";
 import SelectedCharity from "../components/SelectedCharity";
+import OrganizationMypageComp from "../components/OrganizationMypageComp";
 
 interface Organization {
   orgAddr: string;
   cid: string;
 }
 
-const DaehwanPage: FC = () => {
+const OrganizationMyPage: FC = () => {
   const { signer, adminSigner } = useOutletContext<OutletContext>();
 
   const [donationContract, setDonationContract] = useState<Contract>();
@@ -47,15 +48,33 @@ const DaehwanPage: FC = () => {
   return (
     <>
       {!organization ? (
-        <button onClick={selectCharity}>Select Random Charity</button>
+        <>
+          <div className="bg-gray-50 min-h-screen flex flex-col justify-center items-center relative">
+            {/* Title and Buttons */}
+            <h1 className="text-center text-4xl font-semibold mb-4">
+              지금은 프로젝트 신청 기간입니다.
+            </h1>
+            <h2 className="text-center text-2xl font-semibold mb-4">
+              24.08.14 - 24.08.30
+            </h2>
+          </div>
+          {/* <SelectedCharity
+           signer={signer!}
+           organization={organization}></SelectedCharity> */}
+        </>
       ) : (
-        <SelectedCharity
-          signer={signer}
-          organization={organization}
-        ></SelectedCharity>
+        <>
+          {organization.orgAddr === signer!.address ? (
+            <div>Not Selected</div>
+          ) : (
+            <OrganizationMypageComp
+              projectInfo={organization}
+            ></OrganizationMypageComp>
+          )}
+        </>
       )}
     </>
   );
 };
 
-export default DaehwanPage;
+export default OrganizationMyPage;

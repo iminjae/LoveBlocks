@@ -11,7 +11,7 @@ import "../styles/DonationModal.css";
 import mintNftAbi from "../abis/mintNftAbi.json";
 import { mintNftContractAddress } from "../abis/contarctAddress";
 import DonationModal from "../components/DonationCompleModal";
-import * as htmlToImage from 'html-to-image';
+import * as htmlToImage from "html-to-image";
 import NftChart from "../components/NftChart";
 
 interface HoldToken {
@@ -41,14 +41,16 @@ interface MergeToken {
 const DonationPage: FC = () => {
   const { signer, adminSigner } = useOutletContext<OutletContext>();
   const location = useLocation();
-  const { holdTokens, tokenPrice } = location.state || { holdTokens: [], tokenPrice: [] };
+  const { holdTokens, tokenPrice } = location.state || {
+    holdTokens: [],
+    tokenPrice: [],
+  };
   const [mergeTokens, setMergeTokens] = useState<MergeToken[]>();
   const [selectedTokens, setSelectedTokens] = useState<MergeToken[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDonationComplete, setIsDonationComplete] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [mention, setMention] = useState('');
-
+  const [mention, setMention] = useState("");
 
   const donationInfo = {
     title: "기부 제목",
@@ -82,21 +84,23 @@ const DonationPage: FC = () => {
   };
 
   const totalSelectedAmount = selectedTokens.reduce(
-    (total, token) => total + parseFloat((Number(ethers.formatUnits(token.amount, token.decimal)) * Number(token.usd)).toFixed(2)),
+    (total, token) =>
+      total +
+      parseFloat(
+        (
+          Number(ethers.formatUnits(token.amount, token.decimal)) *
+          Number(token.usd)
+        ).toFixed(2)
+      ),
     0
   );
 
   const onSignatureSuccess = async () => {
     console.log("Signature was successful!");
-    setProgress(33);
-    setMention('NFT 생성 중...');
-    await mintNft()
-    setProgress(66);
-    setMention('NFT 업로드 중...');
+    await mintNft();
 
     setIsLoading(false);
-    setProgress(100);
-    setMention('기부 완료!');
+    setMention("기부 완료!");
     setIsDonationComplete(true);
   };
 
@@ -113,11 +117,15 @@ const DonationPage: FC = () => {
       // 이미지와 JSON을 IPFS에 업로드하고, NFT를 발행하는 코드
       const imgIPFS = await pinFileToIPFS();
       const jsonIPFS = await pinJsonToIPFS(imgIPFS);
-      const response = await mintNftContract.mintNft("https://rose-top-beetle-859.mypinata.cloud/ipfs/" + jsonIPFS);
+      console.log("jsonIPFS", jsonIPFS);
+      const response = await mintNftContract.mintNft(
+        "https://rose-top-beetle-859.mypinata.cloud/ipfs/" + jsonIPFS,
+        signer!.address
+      );
       await response.wait();
     } catch (error) {
       console.error(error);
-      setMention('NFT 생성에 실패했습니다.');
+      setMention("NFT 생성에 실패했습니다.");
     }
   };
 
@@ -126,44 +134,48 @@ const DonationPage: FC = () => {
       return "";
     }
 
-    const dataUrl = await htmlToImage.toPng(chartContainerRef.current, { backgroundColor: 'white' });
+    const dataUrl = await htmlToImage.toPng(chartContainerRef.current, {
+      backgroundColor: "white",
+    });
     const blob = await (await fetch(dataUrl)).blob();
 
     try {
       const data = new FormData();
-      data.append('file', blob, 'tokenInfo.png');
+      data.append("file", blob, "tokenInfo.png");
 
       const metadata = JSON.stringify({
         name: "DONATION_NFT",
       });
 
-      data.append('pinataMetadata', metadata);
+      data.append("pinataMetadata", metadata);
 
       const pinataOptions = JSON.stringify({
         cidVersion: 0,
       });
 
-      data.append('pinataOptions', pinataOptions);
+      data.append("pinataOptions", pinataOptions);
 
-      const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_APP_PINATA_JWT}`,
-        },
-        body: data,
-      });
+      const response = await fetch(
+        "https://api.pinata.cloud/pinning/pinFileToIPFS",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_APP_PINATA_JWT}`,
+          },
+          body: data,
+        }
+      );
 
       if (!response.ok) {
-        console.error('Failed to upload file:', response.statusText);
-        setMention('파일 업로드에 실패했습니다.');
+        console.error("Failed to upload file:", response.statusText);
+        setMention("파일 업로드에 실패했습니다.");
       }
 
       const result = await response.json();
       return result.IpfsHash;
-
     } catch (error) {
-      console.error('Error uploading file:', error);
-      setMention('파일 업로드 중 오류가 발생했습니다.');
+      console.error("Error uploading file:", error);
+      setMention("파일 업로드 중 오류가 발생했습니다.");
       throw error;
     }
   };
@@ -173,40 +185,42 @@ const DonationPage: FC = () => {
       image: "https://gateway.pinata.cloud/ipfs/" + imgIPFS,
       attributes: [
         {
-          "trait_type": "기부일",
-          "value": "123123"
+          trait_type: "기부일",
+          value: "123123",
         },
         {
-          "trait_type": "기부단체명",
-          "value": "55555"
-        }
-      ]
+          trait_type: "기부단체명",
+          value: "55555",
+        },
+      ],
     };
 
     const apiKey = `${import.meta.env.VITE_APP_PINATA_API_KEY}`;
     const secretApiKey = `${import.meta.env.VITE_APP_PINATA_API_SECRET_KEY}`;
 
     try {
-      const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'pinata_api_key': apiKey,
-          'pinata_secret_api_key': secretApiKey,
-        },
-        body: JSON.stringify(jsonData),
-      });
+      const response = await fetch(
+        "https://api.pinata.cloud/pinning/pinJSONToIPFS",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            pinata_api_key: apiKey,
+            pinata_secret_api_key: secretApiKey,
+          },
+          body: JSON.stringify(jsonData),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to pin JSON to IPFS');
+        throw new Error("Failed to pin JSON to IPFS");
       }
 
       const data = await response.json();
       return data.IpfsHash;
-
     } catch (error) {
-      console.error('Error pinning JSON to IPFS:', error);
-      setMention('JSON 업로드에 실패했습니다.');
+      console.error("Error pinning JSON to IPFS:", error);
+      setMention("JSON 업로드에 실패했습니다.");
       throw error;
     }
   };
@@ -219,15 +233,24 @@ const DonationPage: FC = () => {
 
       return {
         ...token,
-        usd: matchingPrice ? matchingPrice.usd : null
+        usd: matchingPrice ? matchingPrice.usd : null,
       };
     });
 
     setMergeTokens(mergedTokens);
   }, [tokenPrice]);
 
+  useEffect(() => {
+    if (!signer) return;
+    console.log("signer", signer);
+  }, [signer]);
+
   return (
-    <div className={`min-h-screen flex flex-col font-sans ${isLoading ? 'opacity-50' : ''}`}>
+    <div
+      className={`min-h-screen flex flex-col font-sans ${
+        isLoading ? "opacity-50" : ""
+      }`}
+    >
       <main className="flex-grow">
         <section className="bg-white py-12 px-4 sm:px-6 lg:px-8 shadow-md rounded-lg mt-10 mx-4">
           <div className="max-w-7xl mx-auto">
@@ -255,10 +278,16 @@ const DonationPage: FC = () => {
                 </div>
                 <div className="text-gray-800 font-medium space-y-1">
                   <p>
-                    모금액: <span className="font-bold text-gray-900">{donationInfo.totalAmount}</span>
+                    모금액:{" "}
+                    <span className="font-bold text-gray-900">
+                      {donationInfo.totalAmount}
+                    </span>
                   </p>
                   <p>
-                    기부자 수: <span className="font-bold text-gray-900">{donationInfo.totalDonors}명</span>
+                    기부자 수:{" "}
+                    <span className="font-bold text-gray-900">
+                      {donationInfo.totalDonors}명
+                    </span>
                   </p>
                   <p>
                     기부 기간:{" "}
@@ -282,13 +311,14 @@ const DonationPage: FC = () => {
                 mergeTokens!.map((token: MergeToken) => (
                   <div
                     key={token.tokenAddress}
-                    className={`p-6 rounded-lg shadow-md text-center cursor-pointer transition-transform transform hover:scale-105 ${selectedTokens.some(
-                      (selectedToken) =>
-                        selectedToken.tokenAddress === token.tokenAddress
-                    )
-                      ? "selected-token-card"
-                      : "border border-gray-200"
-                      }`}
+                    className={`p-6 rounded-lg shadow-md text-center cursor-pointer transition-transform transform hover:scale-105 ${
+                      selectedTokens.some(
+                        (selectedToken) =>
+                          selectedToken.tokenAddress === token.tokenAddress
+                      )
+                        ? "selected-token-card"
+                        : "border border-gray-200"
+                    }`}
                     style={{
                       // backgroundImage: `url(${silverCard})`,
                       backgroundSize: "cover",
@@ -307,7 +337,13 @@ const DonationPage: FC = () => {
                       {token.symbol.toUpperCase()}
                     </h3>
                     <p className="mt-2 text-gray-600">
-                      잔액: {(Number(ethers.formatUnits(token.amount, token.decimal)) * Number(token.usd)).toFixed(2)}$
+                      잔액:{" "}
+                      {(
+                        Number(
+                          ethers.formatUnits(token.amount, token.decimal)
+                        ) * Number(token.usd)
+                      ).toFixed(2)}
+                      $
                     </p>
                   </div>
                 ))
@@ -321,11 +357,17 @@ const DonationPage: FC = () => {
 
           <div className="fixed bottom-0 left-0 w-full bg-white shadow-lg py-4 px-6 flex justify-between items-center space-x-4 border-t border-gray-200">
             {/* 왼쪽: 그래프 */}
-            <div ref={chartContainerRef} className="w-2/5 flex flex-col justify-between items-center h-60 relative rounded-md bg-gray-700">
+            <div
+              ref={chartContainerRef}
+              className="w-2/5 flex flex-col justify-between items-center h-60 relative rounded-md bg-gray-700"
+            >
               {/* 로고와 텍스트 */}
               <div className="absolute top-0 left-0 flex items-center space-x-2 p-2">
                 <img src={logo} alt="LoveBlocks Logo" className="h-5 w-5" />
-                <span className="text-sm font-bold text-gray-100">LOVEBLOCKS</span> {/* 텍스트 색상도 어두운 배경에 맞게 변경 */}
+                <span className="text-sm font-bold text-gray-100">
+                  LOVEBLOCKS
+                </span>{" "}
+                {/* 텍스트 색상도 어두운 배경에 맞게 변경 */}
               </div>
 
               {/* 명함 크기의 그래프 자리 */}
@@ -348,7 +390,13 @@ const DonationPage: FC = () => {
                       alt={token.name}
                     />
                     <span className="text-sm font-medium text-gray-800">
-                      {token.symbol.toUpperCase()}: {(Number(ethers.formatUnits(token.amount, token.decimal)) * Number(token.usd)).toFixed(2)}$
+                      {token.symbol.toUpperCase()}:{" "}
+                      {(
+                        Number(
+                          ethers.formatUnits(token.amount, token.decimal)
+                        ) * Number(token.usd)
+                      ).toFixed(2)}
+                      $
                     </span>
                   </div>
                 ))}
@@ -369,7 +417,6 @@ const DonationPage: FC = () => {
               </div>
             </div>
           </div>
-
         </section>
       </main>
 
@@ -388,7 +435,10 @@ const DonationPage: FC = () => {
               <p>진행률: {progress}%</p>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
-              <div className="bg-blue-500 h-4 rounded-full" style={{ width: `${progress}%` }}></div>
+              <div
+                className="bg-blue-500 h-4 rounded-full"
+                style={{ width: `${progress}%` }}
+              ></div>
             </div>
           </div>
         </div>

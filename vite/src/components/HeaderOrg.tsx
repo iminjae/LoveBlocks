@@ -11,7 +11,7 @@ interface HeaderProps {
   setProvider: Dispatch<SetStateAction<ethers.Provider | null>>;
 }
 
-const Header: FC<HeaderProps> = ({ signer, setSigner, setProvider }) => {
+const HeaderOrg: FC<HeaderProps> = ({ signer, setSigner, setProvider }) => {
   const navigate = useNavigate();
 
   return (
@@ -29,33 +29,21 @@ const Header: FC<HeaderProps> = ({ signer, setSigner, setProvider }) => {
         <nav className="hidden md:flex space-x-4 lg:space-x-8">
           <button
             className="text-toss-gray hover:text-toss-blue"
-            onClick={() => navigate("/donation")}
+            onClick={() => navigate("/applyDonatePJ")}
           >
-            기부하기 일반
-          </button>
-          <button
-            className="text-toss-gray hover:text-toss-blue"
-            onClick={() => navigate("/signup")}
-          >
-            현용
+            기부 프로젝트 신청
           </button>
           <button
             className="text-toss-gray hover:text-toss-blue"
             onClick={() => navigate("/sungwoo")}
           >
-            성우
+            대시보드
           </button>
           <button
             className="text-toss-gray hover:text-toss-blue"
-            onClick={() => navigate("/daehwan")}
+            onClick={() => navigate("/organization")}
           >
-            대환
-          </button>
-          <button
-            className="text-toss-gray hover:text-toss-blue"
-            onClick={() => navigate("/minjae")}
-          >
-            민재
+            마이페이지
           </button>
           <ConnectWalletButton
             signer={signer}
@@ -75,4 +63,4 @@ const Header: FC<HeaderProps> = ({ signer, setSigner, setProvider }) => {
   );
 };
 
-export default Header;
+export default HeaderOrg;

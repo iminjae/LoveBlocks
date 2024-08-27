@@ -14,7 +14,7 @@ export default {
         'c-silver': '#C0C0C0',
       },
       fontFamily: {
-        'sans': ['Inter', 'ui-sans-serif', 'system-ui'],
+        'sans': ['LINESeedKR-Bd', 'ui-sans-serif', 'system-ui'],
       },
       animation: {
         fadeInMove: 'fadeInMove 1.5s ease-out forwards',
