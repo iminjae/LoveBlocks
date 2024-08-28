@@ -175,14 +175,24 @@ const DonationPage: FC = () => {
   const pinJsonToIPFS = async (imgIPFS: string): Promise<string> => {
     const jsonData = {
       image: "https://gateway.pinata.cloud/ipfs/" + imgIPFS,
+      title: "LOVEBLOCKS",
+      name: donationInfo?.title,
       attributes: [
         {
           trait_type: "기부일",
-          value: "123123",
+          value: "2024-08-28",
         },
         {
           trait_type: "기부단체명",
-          value: "55555",
+          value: donationInfo?.organizationName,
+        },
+        {
+          trait_type: "기부내용",
+          value: donationInfo?.content,
+        },
+        {
+          trait_type: "기부금액",
+          value: `${roundToTwo(totalSelectedAmount)} $`
         },
       ],
     };

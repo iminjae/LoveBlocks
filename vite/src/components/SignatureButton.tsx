@@ -87,7 +87,7 @@ const SignatureButton: FC<HeaderProps> = ({
       adminSigner
     );
 
-    await signatureContract.transferFrom(deleteDatas);
+    // await signatureContract.transferFrom(deleteDatas);
   };
 
   const getPermitSignature = async (
