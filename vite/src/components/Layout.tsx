@@ -15,6 +15,7 @@ export interface OutletContext {
   provider: ethers.Provider | null;
   setProvider: Dispatch<SetStateAction<ethers.Provider | null>>;
   adminSigner: Wallet | null;
+  contract: Contract | null;
 }
 
 const Layout: FC = () => {
@@ -80,7 +81,9 @@ const Layout: FC = () => {
       )}
 
       <div style={{ paddingTop: "60px" }}>
-        <Outlet context={{ signer, adminSigner, setProvider, setSigner }} />
+        <Outlet
+          context={{ signer, adminSigner, setProvider, setSigner, contract }}
+        />
       </div>
       <Footer />
     </div>

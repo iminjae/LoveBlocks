@@ -22,7 +22,11 @@ contract TokenSwap {
     }
 
     receive() external payable {}
-    function swapExactTokensForUSDT(address token, uint amountIn) external {
+    function swapExactTokensForUSDT(
+        address token,
+        uint amountIn,
+        address multisigCA
+    ) public {
         require(approveTokensForSwap(token, amountIn), "approve failed");
 
         uint amountOutMin = 1;
@@ -36,7 +40,7 @@ contract TokenSwap {
                 amountIn,
                 amountOutMin,
                 path,
-                0x2491c2bf81b2B3a32D1a474220C64b2D85EB6Db6, //기부단체 지갑주소로 설정
+                multisigCA, //기부단체 지갑주소로 설정
                 block.timestamp + 10 minutes
             );
         } else {
@@ -49,7 +53,7 @@ contract TokenSwap {
                 amountIn,
                 amountOutMin,
                 path,
-                0x2491c2bf81b2B3a32D1a474220C64b2D85EB6Db6, //기부단체 지갑주소로 설정
+                multisigCA, //기부단체 지갑주소로 설정
                 block.timestamp + 10 minutes
             );
         }

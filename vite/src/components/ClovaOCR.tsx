@@ -1,5 +1,8 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { Dispatch, FC, SetStateAction, useEffect, useRef, useState } from "react";
 import axios, { AxiosError } from "axios";
+import { Contract, ethers, JsonRpcSigner } from "ethers";
+import donationAbi from "../abis/donationAbi.json";
+import { donationContractAddress } from "../abis/contarctAddress";
 
 interface MessageProps {
   images: {
@@ -11,7 +14,7 @@ interface MessageProps {
   timestamp: number;
 }
 
-interface receiptData {
+interface ReceiptData {
   totalPrice: string;
   itemsData: {
     name: string;
@@ -20,19 +23,26 @@ interface receiptData {
   }[];
 }
 
-const ClovaOCR: FC = () => {
+interface ClovaOCRPorps {
+  signer: JsonRpcSigner | null;
+  addReceiptData: (newData: ReceiptData) => void;
+}
+
+const ClovaOCR: FC<ClovaOCRPorps> = ({ signer, addReceiptData }) => {
   const [image, setImage] = useState<File | null>(null);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<MessageProps | null>(null);
-  const [receiptData, setReceiptData] = useState<receiptData | null>(null);
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
   const [flag, setFlag] = useState<boolean>(false);
+  const [ipfsHash, setIpfsHash] = useState<string[]>([]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const strSplit = e.target.files[0].name.split(".");
       await dataConfig(strSplit);
 
+      console.log("CHECK")
       setImage(e.target.files[0]);
     }
   };
@@ -72,7 +82,7 @@ const ClovaOCR: FC = () => {
         }
       );
 
-      console.log(response.data.IpfsHash);
+      setIpfsHash([response.data.IpfsHash]);
     } catch (error) {
       console.error("Error uploading file to IPFS:", error);
     }
@@ -132,6 +142,14 @@ const ClovaOCR: FC = () => {
     console.log(response);
   };
 
+  const sendIpfsHash = async (donationContract: Contract) => {
+    console.log("ipfsHash", ipfsHash);
+    await donationContract.setReceipts(
+      ipfsHash,
+      parseInt(receiptData!.totalPrice.replace(/,/g, ""), 10)
+    );
+  };
+
   useEffect(() => {
     if (!result) return;
 
@@ -148,6 +166,7 @@ const ClovaOCR: FC = () => {
       };
     });
     setReceiptData({ totalPrice, itemsData });
+    addReceiptData({ totalPrice, itemsData });
   }, [result]);
 
   useEffect(() => {
@@ -156,22 +175,50 @@ const ClovaOCR: FC = () => {
     setFlag(true);
   }, [flag]);
 
+  useEffect(() => {
+    if(!receiptData) return;
+    sendData();
+  }, [receiptData])
+  
+
+  useEffect(() => {
+    if (ipfsHash.length === 0) return;
+    const donationContract = new ethers.Contract(
+      donationContractAddress,
+      donationAbi,
+      signer
+    );
+
+    sendIpfsHash(donationContract);
+  }, [ipfsHash]);
+
+  useEffect(() => {
+    if(!image) return;
+    handleSubmit();
+  }, [image])
+  
+
+
+  const fileInputRef = useRef(null);
+  const handleButtonClick = () => {
+    // 파일 입력 요소를 클릭하여 파일 선택 창 열기
+    fileInputRef.current!.click();
+  };
+
   return (
     <div>
-      <h1>Clova OCR 영수증 인식</h1>
-      <input type="file" accept="image/*" onChange={handleImageChange} />
-      <button onClick={handleSubmit}>이미지 업로드 및 인식</button>
+      <input type="file"
+        accept="image/*"
+        onChange={handleImageChange}
+        ref={fileInputRef}
+        style={{ display: 'none' }}
+      />      
+      <button onClick={handleButtonClick} className="w-28 py-2 text-sm bg-blue-500 text-white rounded-lg font-semibold mb-4 hover:bg-blue-600">영수증 업로드</button>
 
       {error && (
         <div style={{ color: "red" }}>
           <h2>Error:</h2>
           <p>{error}</p>
-        </div>
-      )}
-
-      {receiptData && (
-        <div>
-          <button onClick={sendData}>기록하기</button>
         </div>
       )}
     </div>

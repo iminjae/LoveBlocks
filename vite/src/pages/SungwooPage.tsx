@@ -1,65 +1,115 @@
-import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { FaHandHoldingHeart, FaChartPie, FaProjectDiagram, FaListAlt, FaRocket, FaLightbulb } from 'react-icons/fa';
+import React, { useState, useEffect } from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import {
+  FaHandHoldingHeart,
+  FaChartPie,
+  FaProjectDiagram,
+  FaListAlt,
+} from "react-icons/fa";
 
 const SungwooPage: React.FC = () => {
-  // 샘플 데이터
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
   const donationData = {
     totalDonated: 1434020,
     totalUsed: 1030020,
     usageBreakdown: [
-      { name: '사용됨', value: 1030020, percent: 71.8 },
-      { name: '미사용', value: 404000, percent: 28.2 },
+      { name: "사용됨", value: 1030020, percent: 71.8 },
+      { name: "미사용", value: 404000, percent: 28.2 },
     ],
     projectDonations: [
-      { id: 1, donor: '김철수', project: '프로젝트 A', amount: 500000, date: '2023-03-15' },
-      { id: 2, donor: '이영희', project: '프로젝트 B', amount: 300000, date: '2023-03-16' },
-      { id: 3, donor: '단체 X', project: '프로젝트 C', amount: 230020, date: '2023-03-17' },
+      {
+        id: 1,
+        donor: "김철수",
+        project: "프로젝트 A",
+        amount: 500000,
+        date: "2023-03-15",
+      },
+      {
+        id: 2,
+        donor: "이영희",
+        project: "프로젝트 B",
+        amount: 300000,
+        date: "2023-03-16",
+      },
+      {
+        id: 3,
+        donor: "단체 X",
+        project: "프로젝트 C",
+        amount: 230020,
+        date: "2023-03-17",
+      },
     ],
   };
 
-  const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+  const COLORS = ["#3182F6", "#4DADF7", "#94D0FF", "#C6E5FF", "#E7F4FF"];
+
+  const handleRowClick = (id: number) => {
+    setExpandedRow(expandedRow === id ? null : id);
+  };
 
   return (
-    <div className="bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 min-h-screen py-12 px-4 sm:px-6 lg:px-8 font-noto-sans-kr">
+    <div
+      className={`bg-[#F9FAFB] min-h-screen py-10 px-5 sm:px-10 lg:px-20 font-sans transition-opacity duration-3000 ease-out ${
+        isLoaded ? "opacity-100" : "opacity-0"
+      }`}
+      style={{
+        transform: isLoaded ? "translateY(0)" : "translateY(-2cm)",
+      }}
+    >
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-5xl font-bold text-center text-gray-800 mb-16">기부 현황 대시보드</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {/* 컴포넌트 1: 기부자 기부 금액 */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 transform transition duration-500 hover:scale-105 border-t-4 border-indigo-500">
-            <div className="flex items-center mb-6">
-              <div className="bg-indigo-100 p-3 rounded-full mr-4">
-                <FaHandHoldingHeart className="text-3xl text-indigo-500" />
+        <h1 className="text-3xl font-bold text-center text-[#191F28] mb-12">
+          기부 현황 대시보드
+        </h1>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <div className="bg-white rounded-2xl shadow-sm p-6 transition-all hover:shadow-md">
+            <div className="flex items-center mb-4">
+              <div className="bg-white border border-[#6BCB77] p-3 rounded-full mr-4">
+                <FaHandHoldingHeart className="text-2xl text-[#6BCB77]" />
               </div>
-              <h2 className="text-2xl font-semibold text-gray-800">기부자 기부 금액</h2>
+              <h2 className="text-lg font-medium text-[#191F28]">
+                기부자 기부 금액
+              </h2>
             </div>
-            <p className="text-4xl font-bold text-indigo-500">
-              {donationData.totalDonated.toLocaleString()} 원
-            </p>
+            <div className="flex items-center justify-center pt-20">
+              <p className="text-4xl font-bold text-[#3182F6]">
+                {donationData.totalDonated.toLocaleString()} 원
+              </p>
+            </div>
           </div>
 
-          {/* 컴포넌트 2: 기부단체 사용 기부금액 */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 transform transition duration-500 hover:scale-105 border-t-4 border-emerald-500">
-            <div className="flex items-center mb-6">
-              <div className="bg-emerald-100 p-3 rounded-full mr-4">
-                <FaChartPie className="text-3xl text-emerald-500" />
+          <div className="bg-white rounded-2xl shadow-sm p-6 transition-all hover:shadow-md">
+            <div className="flex items-center mb-4">
+              <div className="bg-white border border-[#FF6B6B] p-3 rounded-full mr-4">
+                <FaChartPie className="text-2xl text-[#FF6B6B]" />
               </div>
-              <h2 className="text-2xl font-semibold text-gray-800">기부단체 사용 기부금액</h2>
+              <h2 className="text-lg font-medium text-[#191F28]">
+                기부단체 사용 기부금액
+              </h2>
             </div>
-            <p className="text-4xl font-bold text-emerald-500">
-              {donationData.totalUsed.toLocaleString()} 원
-            </p>
+            <div className="flex items-center justify-center pt-20">
+              <p className="text-4xl font-bold text-[#3182F6]">
+                {donationData.totalUsed.toLocaleString()} 원
+              </p>
+            </div>
           </div>
 
-          {/* 컴포넌트 3: 기부금 활용 현황 */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 transform transition duration-500 hover:scale-105 border-t-4 border-blue-500">
-            <div className="flex items-center mb-6">
-              <div className="bg-blue-100 p-3 rounded-full mr-4">
-                <FaProjectDiagram className="text-3xl text-blue-500" />
+          <div className="bg-white rounded-2xl shadow-sm p-6 transition-all hover:shadow-md">
+            <div className="flex items-center mb-4">
+              <div className="bg-white border border-[#845EC2] p-3 rounded-full mr-4">
+                <FaProjectDiagram className="text-2xl text-[#845EC2]" />
               </div>
-              <h2 className="text-2xl font-semibold text-gray-800">기부금 활용 현황</h2>
+              <h2 className="text-lg font-medium text-[#191F28]">
+                기부금 활용 현황
+              </h2>
             </div>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie
                   data={donationData.usageBreakdown}
@@ -73,74 +123,78 @@ const SungwooPage: React.FC = () => {
                   label={({ percent }) => `${(percent * 100).toFixed(1)}%`}
                 >
                   {donationData.usageBreakdown.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
                   ))}
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
-            <div className="flex justify-center mt-6">
+            <div className="flex justify-center mt-4">
               {donationData.usageBreakdown.map((entry, index) => (
-                <div key={`legend-${index}`} className="flex items-center mx-3">
+                <div key={`legend-${index}`} className="flex items-center mx-2">
                   <div
-                    className="w-4 h-4 mr-2 rounded-full"
+                    className="w-3 h-3 mr-1 rounded-full"
                     style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   ></div>
-                  <span className="text-sm text-gray-600">{entry.name} ({entry.percent}%)</span>
+                  <span className="text-xs text-[#4E5968]">
+                    {entry.name} ({entry.percent.toFixed(1)}%)
+                  </span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* 추가 섹션 */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-10">
-          <div className="bg-white rounded-2xl shadow-lg p-8 transform transition duration-500 hover:scale-105 border-t-4 border-amber-500">
-            <div className="flex items-center mb-6">
-              <div className="bg-amber-100 p-3 rounded-full mr-4">
-                <FaRocket className="text-3xl text-amber-500" />
-              </div>
-              <h2 className="text-2xl font-semibold text-gray-800">목표 달성률</h2>
+        <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="flex items-center mb-6">
+            <div className="bg-white border border-[#FFC75F] p-3 rounded-full mr-4">
+              <FaListAlt className="text-2xl text-[#FFC75F]" />
             </div>
-            <p className="text-4xl font-bold text-amber-500">75%</p>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-8 transform transition duration-500 hover:scale-105 border-t-4 border-rose-500">
-            <div className="flex items-center mb-6">
-              <div className="bg-rose-100 p-3 rounded-full mr-4">
-                <FaLightbulb className="text-3xl text-rose-500" />
-              </div>
-              <h2 className="text-2xl font-semibold text-gray-800">새로운 프로젝트</h2>
-            </div>
-            <p className="text-4xl font-bold text-rose-500">3</p>
-          </div>
-        </div>
-
-        {/* 컴포넌트 4: 프로젝트별 기부 목록 */}
-        <div className="mt-16 bg-white rounded-2xl shadow-lg p-8">
-          <div className="flex items-center mb-8">
-            <div className="bg-violet-100 p-3 rounded-full mr-4">
-              <FaListAlt className="text-3xl text-violet-500" />
-            </div>
-            <h2 className="text-3xl font-semibold text-gray-800">프로젝트별 기부 목록</h2>
+            <h2 className="text-xl font-medium text-[#191F28]">
+              프로젝트별 기부 목록
+            </h2>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full table-auto">
+            <table className="min-w-full divide-y divide-gray-200">
               <thead>
-                <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                  <th className="py-3 px-6 text-left">기부자</th>
-                  <th className="py-3 px-6 text-left">프로젝트</th>
-                  <th className="py-3 px-6 text-left">금액</th>
-                  <th className="py-3 px-6 text-left">날짜</th>
+                <tr className="bg-[#F9FAFB] text-[#4E5968] text-xs">
+                  <th className="py-3 px-4 text-left font-medium">기부자</th>
+                  <th className="py-3 px-4 text-left font-medium">프로젝트</th>
+                  <th className="py-3 px-4 text-left font-medium">금액</th>
+                  <th className="py-3 px-4 text-left font-medium">날짜</th>
                 </tr>
               </thead>
-              <tbody className="text-gray-600 text-sm font-light">
+              <tbody className="text-[#191F28] text-sm">
                 {donationData.projectDonations.map((donation) => (
-                  <tr key={donation.id} className="border-b border-gray-200 hover:bg-gray-100">
-                    <td className="py-3 px-6 text-left whitespace-nowrap">{donation.donor}</td>
-                    <td className="py-3 px-6 text-left">{donation.project}</td>
-                    <td className="py-3 px-6 text-left">{donation.amount.toLocaleString()} 원</td>
-                    <td className="py-3 px-6 text-left">{donation.date}</td>
-                  </tr>
+                  <React.Fragment key={donation.id}>
+                    <tr
+                      className={`border-b border-[#E5E8EB] hover:bg-[#F9FAFB] cursor-pointer ${
+                        expandedRow === donation.id ? "bg-[#F9FAFB]" : ""
+                      }`}
+                      onClick={() => handleRowClick(donation.id)}
+                    >
+                      <td className="py-3 px-4 text-left">{donation.donor}</td>
+                      <td className="py-3 px-4 text-left">
+                        {donation.project}
+                      </td>
+                      <td className="py-3 px-4 text-left text-[#3182F6]">
+                        {donation.amount.toLocaleString()} 원
+                      </td>
+                      <td className="py-3 px-4 text-left">{donation.date}</td>
+                    </tr>
+                    {expandedRow === donation.id && (
+                      <tr className="bg-[#F9FAFB]">
+                        <td colSpan={4} className="p-4 text-[#4E5968] text-xs">
+                          상세 내용: 기부자 {donation.donor}님이{" "}
+                          {donation.project} 프로젝트에{" "}
+                          {donation.amount.toLocaleString()} 원을
+                          기부하였습니다. 기부 날짜: {donation.date}.
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>

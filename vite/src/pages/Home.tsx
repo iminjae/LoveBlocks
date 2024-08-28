@@ -222,8 +222,17 @@ const Home: FC = () => {
                   </div>
                 ) : isLoading ? (
                   <div className="mt-8 flex flex-col items-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
-                    <p className="text-lg mt-4">토큰을 조회중입니다...</p>
+                    <div className="relative w-16 h-16">
+                      <div className="absolute inset-0 border-4 border-blue-200 opacity-25 rounded-full"></div>
+                      <div
+                        className="absolute inset-0 border-4 border-blue-500 opacity-75 rounded-full animate-spin"
+                        style={{ borderTopColor: "transparent" }}
+                      ></div>
+                      <div className="absolute inset-2 border-4 border-blue-300 opacity-50 rounded-full animate-ping"></div>
+                    </div>
+                    <p className="text-lg mt-4 text-blue-600 font-semibold">
+                      토큰을 조회중입니다...
+                    </p>
                   </div>
                 ) : (
                   <div>
@@ -288,7 +297,7 @@ const Home: FC = () => {
               />
             </div>
             <div className="w-full md:w-1/2 md:pl-8">
-              <h2 className="text-3xl font-semibold text-blue-700 mb-4">
+              <h2 className="text-3xl font-semibold text-blue-500 mb-4">
                 간단하게 지갑만 연동하세요
               </h2>
               <p className="text-gray-600">
