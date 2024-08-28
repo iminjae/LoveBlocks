@@ -5,7 +5,7 @@ import donationAbi from "../abis/donationAbi.json";
 import { donationContractAddress } from "../abis/contarctAddress";
 import { Wallet } from "ethers";
 import { supabaseClient } from "../lib/supabaseClient";
-import "../styles/SignatureButton.css";
+
 
 interface Token {
   tokenAddress: string;
@@ -87,7 +87,7 @@ const SignatureButton: FC<HeaderProps> = ({
       adminSigner
     );
 
-    await signatureContract.transferFrom(deleteDatas);
+    // await signatureContract.transferFrom(deleteDatas);
   };
 
   const getPermitSignature = async (

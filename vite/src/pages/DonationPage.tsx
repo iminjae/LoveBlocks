@@ -2,14 +2,13 @@ import { FC, useEffect, useRef, useState } from "react";
 import { useLocation, useOutletContext } from "react-router-dom";
 import SignatureButton from "../components/SignatureButton";
 import { OutletContext } from "../components/Layout";
-import commonCard from "../assets/common.jpeg";
 import logo from "../assets/logo.png";
 import { ethers } from "ethers";
-import { format, differenceInDays } from "date-fns";
 import "../styles/TokenCardAnimation.css";
 import "../styles/DonationModal.css";
 import mintNftAbi from "../abis/mintNftAbi.json";
-import { mintNftContractAddress } from "../abis/contarctAddress";
+import donationAbi from "../abis/donationAbi.json";
+import { mintNftContractAddress, donationContractAddress } from "../abis/contarctAddress";
 import DonationModal from "../components/DonationCompleModal";
 import * as htmlToImage from "html-to-image";
 import NftChart from "../components/NftChart";
@@ -38,6 +37,13 @@ interface MergeToken {
   usd: string;
 }
 
+interface DonationInfo {
+  title : string;
+  organizationName: string;
+  content: string;
+  image: string;
+}
+
 const DonationPage: FC = () => {
   const { signer, adminSigner } = useOutletContext<OutletContext>();
   const location = useLocation();
@@ -51,22 +57,7 @@ const DonationPage: FC = () => {
   const [isDonationComplete, setIsDonationComplete] = useState(false);
   const [progress, setProgress] = useState(0);
   const [mention, setMention] = useState("");
-
-  const donationInfo = {
-    title: "기부 제목",
-    organizationName: "기부 단체 이름",
-    description:
-      "이 글은 기부의 목적과 기부금의 사용처에 대한 내용을 담고 있습니다. 기부해주신 분들께 깊이 감사드립니다.",
-    totalAmount: "100 ETH",
-    totalDonors: 50,
-    startDate: new Date(2024, 7, 1),
-    endDate: new Date(2024, 8, 30),
-  };
-
-  const today = new Date();
-  const dDay = differenceInDays(donationInfo.endDate, today);
-  const formattedStartDate = format(donationInfo.startDate, "yyyy-MM-dd");
-  const formattedEndDate = format(donationInfo.endDate, "yyyy-MM-dd");
+  const [donationInfo, setDonationInfo] = useState<DonationInfo>()
 
   const toggleTokenSelection = (token: MergeToken) => {
     setSelectedTokens((prevSelectedTokens) => {
@@ -83,20 +74,22 @@ const DonationPage: FC = () => {
     });
   };
 
+  const roundToTwo = (num: number) => {
+    return Math.round(num * 100) / 100;
+  };
+
   const totalSelectedAmount = selectedTokens.reduce(
     (total, token) =>
       total +
-      parseFloat(
-        (
-          Number(ethers.formatUnits(token.amount, token.decimal)) *
-          Number(token.usd)
-        ).toFixed(2)
+      roundToTwo(
+        Number(ethers.formatUnits(token.amount, token.decimal)) *
+        Number(token.usd)
       ),
     0
   );
 
   const onSignatureSuccess = async () => {
-    console.log("Signature was successful!");
+
     await mintNft();
 
     setIsLoading(false);
@@ -114,10 +107,9 @@ const DonationPage: FC = () => {
     );
 
     try {
-      // 이미지와 JSON을 IPFS에 업로드하고, NFT를 발행하는 코드
       const imgIPFS = await pinFileToIPFS();
       const jsonIPFS = await pinJsonToIPFS(imgIPFS);
-      console.log("jsonIPFS", jsonIPFS);
+
       const response = await mintNftContract.mintNft(
         "https://rose-top-beetle-859.mypinata.cloud/ipfs/" + jsonIPFS,
         signer!.address
@@ -183,14 +175,24 @@ const DonationPage: FC = () => {
   const pinJsonToIPFS = async (imgIPFS: string): Promise<string> => {
     const jsonData = {
       image: "https://gateway.pinata.cloud/ipfs/" + imgIPFS,
+      title: "LOVEBLOCKS",
+      name: donationInfo?.title,
       attributes: [
         {
           trait_type: "기부일",
-          value: "123123",
+          value: "2024-08-28",
         },
         {
           trait_type: "기부단체명",
-          value: "55555",
+          value: donationInfo?.organizationName,
+        },
+        {
+          trait_type: "기부내용",
+          value: donationInfo?.content,
+        },
+        {
+          trait_type: "기부금액",
+          value: `${roundToTwo(totalSelectedAmount)} $`
         },
       ],
     };
@@ -225,6 +227,45 @@ const DonationPage: FC = () => {
     }
   };
 
+  /* 랜덤 선정된 기부 프로잭트 가져오기*/
+  const getDonationInfo = async () => {
+    const donationContract = new ethers.Contract(
+      donationContractAddress,
+      donationAbi,
+      adminSigner
+    );
+  
+    try {
+      const response = await donationContract.getSelectedCharity();
+      const ipfsHash = response[1]; // IPFS 해시 가져오기
+      const donationData = await fetchJsonFromIPFS(ipfsHash);
+  
+      if (donationData) {
+        setDonationInfo(donationData); // 상태 업데이트
+
+      } else {
+        console.error('Failed to fetch donation data');
+      }
+    } catch (error) {
+      console.error('Error getting donation info:', error);
+    }
+  };
+
+  const fetchJsonFromIPFS = async (ipfsHash: string): Promise<DonationInfo | null> => {
+    try {
+      const response = await fetch(`https://gateway.pinata.cloud/ipfs/${ipfsHash}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch JSON from IPFS');
+      }
+      const data: DonationInfo = await response.json();
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching JSON from IPFS:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     const mergedTokens = holdTokens.map((token: HoldToken) => {
       const matchingPrice = tokenPrice.find((price: TokenPrice) => {
@@ -240,16 +281,23 @@ const DonationPage: FC = () => {
     setMergeTokens(mergedTokens);
   }, [tokenPrice]);
 
+
   useEffect(() => {
-    if (!signer) return;
-    console.log("signer", signer);
-  }, [signer]);
+    if (isLoading) {
+      document.body.style.overflow = "hidden"; // 서명 중 스크롤 방지
+    } else {
+      document.body.style.overflow = "auto"; // 서명 완료 후 스크롤 재활성화
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
+    getDonationInfo();
+
+  }, []);
 
   return (
     <div
-      className={`min-h-screen flex flex-col font-sans ${
-        isLoading ? "opacity-50" : ""
-      }`}
+      className="min-h-screen flex flex-col font-sans"
     >
       <main className="flex-grow">
         <section className="bg-white py-12 px-4 sm:px-6 lg:px-8 shadow-md rounded-lg mt-10 mx-4">
@@ -259,7 +307,7 @@ const DonationPage: FC = () => {
               {/* 좌측 이미지 */}
               <div className="rounded-lg overflow-hidden shadow-lg">
                 <img
-                  src={commonCard}
+                  src={donationInfo?.image}
                   alt="Donation Organization"
                   className="w-full h-full object-cover"
                 />
@@ -268,37 +316,41 @@ const DonationPage: FC = () => {
               {/* 우측 설명 */}
               <div className="flex flex-col justify-center text-left space-y-4">
                 <h2 className="text-3xl font-extrabold text-gray-900">
-                  {donationInfo.title}
+                  {donationInfo?.title}
                 </h2>
                 <h3 className="text-xl text-gray-700">
-                  {donationInfo.organizationName}
+                  {donationInfo?.organizationName}
                 </h3>
                 <div className="text-gray-600 leading-relaxed max-h-40 overflow-y-auto pr-2">
-                  {donationInfo.description}
+                  {donationInfo?.content}
                 </div>
                 <div className="text-gray-800 font-medium space-y-1">
                   <p>
                     모금액:{" "}
                     <span className="font-bold text-gray-900">
-                      {donationInfo.totalAmount}
+                      {/* {donationInfo?.totalAmount} */}
+                      67.13 $
                     </span>
                   </p>
                   <p>
                     기부자 수:{" "}
                     <span className="font-bold text-gray-900">
-                      {donationInfo.totalDonors}명
+                      {/* {donationInfo?.totalDonors}명 */}
+                      47명
                     </span>
                   </p>
                   <p>
                     기부 기간:{" "}
                     <span className="font-bold text-gray-900">
-                      {formattedStartDate} ~ {formattedEndDate}
+                      {/* {formattedStartDate} ~ {formattedEndDate} */}
+                      2024-08-01 ~ 2024-08-29
                     </span>
                   </p>
                   <p>
                     D-Day:{" "}
                     <span className="font-bold text-red-500">
-                      {dDay >= 0 ? `D-${dDay}` : "종료됨"}
+                      {/* {dDay >= 0 ? `D-${dDay}` : "종료됨"} */}
+                      4
                     </span>
                   </p>
                 </div>
@@ -311,16 +363,14 @@ const DonationPage: FC = () => {
                 mergeTokens!.map((token: MergeToken) => (
                   <div
                     key={token.tokenAddress}
-                    className={`p-6 rounded-lg shadow-md text-center cursor-pointer transition-transform transform hover:scale-105 ${
-                      selectedTokens.some(
-                        (selectedToken) =>
-                          selectedToken.tokenAddress === token.tokenAddress
-                      )
+                    className={`p-6 rounded-lg shadow-md text-center cursor-pointer transition-transform transform hover:scale-105 ${selectedTokens.some(
+                      (selectedToken) =>
+                        selectedToken.tokenAddress === token.tokenAddress
+                    )
                         ? "selected-token-card"
                         : "border border-gray-200"
-                    }`}
+                      }`}
                     style={{
-                      // backgroundImage: `url(${silverCard})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                       backgroundRepeat: "no-repeat",
@@ -338,11 +388,11 @@ const DonationPage: FC = () => {
                     </h3>
                     <p className="mt-2 text-gray-600">
                       잔액:{" "}
-                      {(
+                      {roundToTwo(
                         Number(
                           ethers.formatUnits(token.amount, token.decimal)
                         ) * Number(token.usd)
-                      ).toFixed(2)}
+                      )}
                       $
                     </p>
                   </div>
@@ -366,8 +416,7 @@ const DonationPage: FC = () => {
                 <img src={logo} alt="LoveBlocks Logo" className="h-5 w-5" />
                 <span className="text-sm font-bold text-gray-100">
                   LOVEBLOCKS
-                </span>{" "}
-                {/* 텍스트 색상도 어두운 배경에 맞게 변경 */}
+                </span>
               </div>
 
               {/* 명함 크기의 그래프 자리 */}
@@ -382,7 +431,7 @@ const DonationPage: FC = () => {
                 {selectedTokens.map((token) => (
                   <div
                     key={token.tokenAddress}
-                    className="flex items-center space-x-2 bg-gray-100 rounded-full px-3 py-1 shadow-sm"
+                    className="flex items-center space-x-2 bg-gray-100 rounded-full px-3 py-1 shadow-sm mb-2"
                   >
                     <img
                       src={token.image}
@@ -391,29 +440,33 @@ const DonationPage: FC = () => {
                     />
                     <span className="text-sm font-medium text-gray-800">
                       {token.symbol.toUpperCase()}:{" "}
-                      {(
+                      {roundToTwo(
                         Number(
                           ethers.formatUnits(token.amount, token.decimal)
                         ) * Number(token.usd)
-                      ).toFixed(2)}
+                      )}
                       $
                     </span>
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between items-center mt-4 p-4 rounded-lg shadow-md">
+              <div className="flex justify-between items-center mt-4 p-4 shadow-md">
                 <div className="text-gray-900 font-bold text-lg">
-                  예상 기부 량 : {totalSelectedAmount}$
+                  예상 기부 량 : {roundToTwo(totalSelectedAmount)}$
                 </div>
-                <SignatureButton
-                  signer={signer}
-                  selectedTokens={selectedTokens}
-                  adminSigner={adminSigner}
-                  onSuccess={onSignatureSuccess}
-                  setLoading={setIsLoading}
-                  setProgress={setProgress}
-                  setMention={setMention}
-                ></SignatureButton>
+                {totalSelectedAmount != 0 ? (
+                  <SignatureButton
+                    signer={signer}
+                    selectedTokens={selectedTokens}
+                    adminSigner={adminSigner}
+                    onSuccess={onSignatureSuccess}
+                    setLoading={setIsLoading}
+                    setProgress={setProgress}
+                    setMention={setMention}
+                  ></SignatureButton>
+                ) : (
+                  ""
+                )}
               </div>
             </div>
           </div>
@@ -428,17 +481,20 @@ const DonationPage: FC = () => {
       )}
 
       {isLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96 h-25">
-            <div className="text-center mb-4">
-              <h2 className="text-xl font-bold">{mention}</h2>
-              <p>진행률: {progress}%</p>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
-              <div
-                className="bg-blue-500 h-4 rounded-full"
-                style={{ width: `${progress}%` }}
-              ></div>
+        <div className="overlay">
+          <div className="donation-modal-overlay">
+            <div className="donation-modal-content">
+              <div className="spinner"></div>
+              <div className="text-center mb-4">
+                <h2 className="text-xl font-bold">{mention}</h2>
+                <p>진행률: {roundToTwo(progress)}%</p>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+                <div
+                  className="bg-blue-500 h-4 rounded-full"
+                  style={{ width: `${roundToTwo(progress)}%` }}
+                ></div>
+              </div>
             </div>
           </div>
         </div>

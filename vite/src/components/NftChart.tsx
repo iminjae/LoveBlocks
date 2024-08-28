@@ -29,14 +29,6 @@ const colorPalette = [
   '#FFC75F', // Light Orange
 ];
 
-const getRandomScale = () => {
-  return Math.random() * 0.5 + 0.75; // 0.75배에서 1.25배 사이의 랜덤 크기
-};
-
-const getRandomRotation = () => {
-  return Math.random() * 20 - 10; // -10도에서 10도 사이의 랜덤 회전
-};
-
 const NftChart: FC<NftChartProps> = ({ tokens }) => {
   const [blocks, setBlocks] = useState<MergeToken[]>([]);
 
@@ -46,6 +38,7 @@ const NftChart: FC<NftChartProps> = ({ tokens }) => {
 
   return (
     <div className="nft-chart-container">
+      <div className="nft-chart-logo">LOVEBLOCKS</div>
       {blocks.length === 0 ? (
         <div className="nft-chart-empty">
           <p>토큰을 선택하면 여기에서 시각화됩니다.</p>
@@ -58,8 +51,6 @@ const NftChart: FC<NftChartProps> = ({ tokens }) => {
               className="lego-block"
               style={{
                 backgroundColor: colorPalette[index % colorPalette.length],
-                transform: `scale(${getRandomScale()}) rotate(${getRandomRotation()}deg)`,
-                zIndex: blocks.length - index,
               }}
             >
               <div className="lego-top">
