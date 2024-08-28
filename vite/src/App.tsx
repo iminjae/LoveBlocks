@@ -1,10 +1,7 @@
 import { FC } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
-
 import SungwooPage from "./pages/SungwooPage";
-
-import MinjaePage from "./pages/MinjaePage";
 import Layout from "./components/Layout";
 import DonationPage from "./pages/DonationPage";
 import ApplyDonationPJPage from "./pages/ApplyDonationPJPage";
@@ -24,7 +21,6 @@ const App: FC = () => {
           <Route path="/sungwoo" element={<SungwooPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/organization" element={<OrganizationMyPage />} />
-          <Route path="/minjae" element={<MinjaePage />} />
         </Route>
       </Routes>
     </BrowserRouter>
