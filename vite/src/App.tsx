@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
-import SungwooPage from "./pages/SungwooPage";
+import Dashboard from "./pages/Dashboard";
 import Layout from "./components/Layout";
 import DonationPage from "./pages/DonationPage";
 import ApplyDonationPJPage from "./pages/ApplyDonationPJPage";
@@ -18,7 +18,7 @@ const App: FC = () => {
           <Route path="/donation" element={<DonationPage />} />
           <Route path="/applyDonatePJ" element={<ApplyDonationPJPage />} />
           <Route path="/mypage" element={<MyPage />} />
-          <Route path="/sungwoo" element={<SungwooPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/organization" element={<OrganizationMyPage />} />
         </Route>

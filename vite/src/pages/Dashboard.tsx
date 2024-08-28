@@ -7,7 +7,7 @@ import {
   FaListAlt,
 } from "react-icons/fa";
 
-const SungwooPage: React.FC = () => {
+const Dashboard: React.FC = () => {
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -205,4 +205,4 @@ const SungwooPage: React.FC = () => {
   );
 };
 
-export default SungwooPage;
+export default Dashboard;
