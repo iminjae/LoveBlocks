@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { Dispatch, FC, SetStateAction, useEffect, useRef, useState } from "react";
 import axios, { AxiosError } from "axios";
 import { Contract, ethers, JsonRpcSigner } from "ethers";
 import donationAbi from "../abis/donationAbi.json";
@@ -14,7 +14,7 @@ interface MessageProps {
   timestamp: number;
 }
 
-interface receiptData {
+interface ReceiptData {
   totalPrice: string;
   itemsData: {
     name: string;
@@ -25,14 +25,15 @@ interface receiptData {
 
 interface ClovaOCRPorps {
   signer: JsonRpcSigner | null;
+  addReceiptData: (newData: ReceiptData) => void;
 }
 
-const ClovaOCR: FC<ClovaOCRPorps> = ({ signer }) => {
+const ClovaOCR: FC<ClovaOCRPorps> = ({ signer, addReceiptData }) => {
   const [image, setImage] = useState<File | null>(null);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<MessageProps | null>(null);
-  const [receiptData, setReceiptData] = useState<receiptData | null>(null);
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
   const [flag, setFlag] = useState<boolean>(false);
   const [ipfsHash, setIpfsHash] = useState<string[]>([]);
 
@@ -41,6 +42,7 @@ const ClovaOCR: FC<ClovaOCRPorps> = ({ signer }) => {
       const strSplit = e.target.files[0].name.split(".");
       await dataConfig(strSplit);
 
+      console.log("CHECK")
       setImage(e.target.files[0]);
     }
   };
@@ -164,6 +166,7 @@ const ClovaOCR: FC<ClovaOCRPorps> = ({ signer }) => {
       };
     });
     setReceiptData({ totalPrice, itemsData });
+    addReceiptData({ totalPrice, itemsData });
   }, [result]);
 
   useEffect(() => {
@@ -171,6 +174,12 @@ const ClovaOCR: FC<ClovaOCRPorps> = ({ signer }) => {
     getFileCount();
     setFlag(true);
   }, [flag]);
+
+  useEffect(() => {
+    if(!receiptData) return;
+    sendData();
+  }, [receiptData])
+  
 
   useEffect(() => {
     if (ipfsHash.length === 0) return;
@@ -183,22 +192,33 @@ const ClovaOCR: FC<ClovaOCRPorps> = ({ signer }) => {
     sendIpfsHash(donationContract);
   }, [ipfsHash]);
 
+  useEffect(() => {
+    if(!image) return;
+    handleSubmit();
+  }, [image])
+  
+
+
+  const fileInputRef = useRef(null);
+  const handleButtonClick = () => {
+    // 파일 입력 요소를 클릭하여 파일 선택 창 열기
+    fileInputRef.current!.click();
+  };
+
   return (
     <div>
-      <h1>Clova OCR 영수증 인식</h1>
-      <input type="file" accept="image/*" onChange={handleImageChange} />
-      <button onClick={handleSubmit}>이미지 업로드 및 인식</button>
+      <input type="file"
+        accept="image/*"
+        onChange={handleImageChange}
+        ref={fileInputRef}
+        style={{ display: 'none' }}
+      />      
+      <button onClick={handleButtonClick} className="w-28 py-2 text-sm bg-blue-500 text-white rounded-lg font-semibold mb-4 hover:bg-blue-600">영수증 업로드</button>
 
       {error && (
         <div style={{ color: "red" }}>
           <h2>Error:</h2>
           <p>{error}</p>
-        </div>
-      )}
-
-      {receiptData && (
-        <div>
-          <button onClick={sendData}>기록하기</button>
         </div>
       )}
     </div>

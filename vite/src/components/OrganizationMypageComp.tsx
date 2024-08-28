@@ -18,6 +18,15 @@ interface OrgData {
   image: string;
 }
 
+interface ReceiptData {
+  totalPrice: string;
+  itemsData: {
+    name: string;
+    count: string;
+    price: string;
+  }[];
+}
+
 <motion.div animate={{ scale: 0.5 }} />;
 
 const extractReceiptData = async (file: File) => {
@@ -53,6 +62,8 @@ const OrganizationMypageComp: React.FC<OrganizationMypageCompProps> = ({
   const [globalLoading, setGlobalLoading] = useState<boolean>(false);
   const [isContentVisible, setIsContentVisible] = useState<boolean>(false);
 
+  const [receipt, setReceipt] = useState<ReceiptData[]>([]);
+
   const [data, setData] = useState<OrgData>();
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,12 +78,6 @@ const OrganizationMypageComp: React.FC<OrganizationMypageCompProps> = ({
         },
       ]);
     }
-  };
-
-  const handleCheckboxChange = (index: number) => {
-    setSelectedIndexes((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-    );
   };
 
   const handleWithdraw = async (amount: number, index: number) => {
@@ -127,6 +132,23 @@ const OrganizationMypageComp: React.FC<OrganizationMypageCompProps> = ({
   useEffect(() => {
     getUrl();
   }, []);
+
+  useEffect(() => {
+    if (receipt.length === 0) return;
+    console.log("receipt", receipt);
+  }, [receipt]);
+
+  const addReceiptData = (newData: ReceiptData) => {
+    setReceipt((prevReceipt) => [...prevReceipt, newData]);
+  };
+
+  const [expandedIndexes, setExpandedIndexes] = useState<number[]>([]);
+
+  const toggleExpand = (index: number) => {
+    setExpandedIndexes((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+    );
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col justify-center items-center relative">
@@ -241,103 +263,72 @@ const OrganizationMypageComp: React.FC<OrganizationMypageCompProps> = ({
             {/* Box 3: Usage History */}
 
             <div className="mb-6 p-6 mt-20 bg-white rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                기부금 사용 내역
-              </h2>
+              <div className="flex justify-between">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  기부금 사용 내역
+                </h2>
+                <ClovaOCR
+                  signer={signer}
+                  addReceiptData={addReceiptData}
+                ></ClovaOCR>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full bg-white rounded-lg overflow-hidden">
                   <thead>
                     <tr className="bg-gray-100 text-gray-700 text-left text-sm font-semibold">
-                      <th className="p-3">날짜</th>
-                      <th className="p-3">아이템</th>
-                      <th className="p-3">양/개수</th>
-                      <th className="p-3">금액</th>
-                      <th className="p-3">선택</th>
-                      <th className="p-3 text-center">수령</th>
+                      <th className="p-3">총 금액</th>
+                      <th className="p-3">구매 물품 수</th>
+                      <th className="p-3">상세보기</th>
                     </tr>
                   </thead>
                   <tbody className="text-gray-600 text-sm">
-                    {usageHistory.map((entry, entryIndex) =>
-                      entry.items.map((item, itemIndex) => {
-                        const index = entryIndex * 10 + itemIndex;
-                        const isSelected = selectedIndexes.includes(index);
-                        const loading = isLoading[index];
-                        const received = isReceived[index];
-
-                        return (
+                    {receipt.map((entry, entryIndex) => {
+                      const isExpanded = expandedIndexes.includes(entryIndex);
+                      return (
+                        <React.Fragment key={entryIndex}>
                           <tr
-                            key={`${entryIndex}-${itemIndex}`}
-                            className="border-b last:border-none"
+                            className="border-b last:border-none cursor-pointer"
+                            onClick={() => toggleExpand(entryIndex)}
                           >
-                            <td className="p-3">{entry.date}</td>
-                            <td className="p-3">{item.name}</td>
-                            <td className="p-3">{item.quantity}</td>
-                            <td className="p-3">{item.amount}</td>
-                            <td className="p-3 text-center">
-                              <input
-                                type="checkbox"
-                                onChange={() => handleCheckboxChange(index)}
-                                checked={isSelected}
-                                disabled={received || globalLoading}
-                              />
-                            </td>
-                            <td className="p-3 text-center">
-                              <button
-                                className={`px-4 py-2 rounded-lg text-sm ${
-                                  isSelected && !received
-                                    ? "bg-blue-500 text-white hover:bg-blue-600"
-                                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                } ${loading ? "opacity-50" : ""}`}
-                                disabled={
-                                  !isSelected ||
-                                  loading ||
-                                  received ||
-                                  globalLoading
-                                }
-                                onClick={() =>
-                                  handleWithdraw(
-                                    parseFloat(item.amount.slice(1)),
-                                    index
-                                  )
-                                }
-                              >
-                                {loading
-                                  ? "로딩 중..."
-                                  : received
-                                  ? "수령 완료"
-                                  : "수령하기"}
-                              </button>
+                            <td className="p-3">{entry.totalPrice} 원</td>
+                            <td className="p-3">{entry.itemsData.length} 개</td>
+                            <td className="p-3 text-blue-500 underline">
+                              {isExpanded ? "접기" : "펼치기"}
                             </td>
                           </tr>
-                        );
-                      })
-                    )}
+                          {isExpanded && (
+                            <tr className="bg-gray-50">
+                              <td colSpan={3}>
+                                <table className="w-full bg-white rounded-lg mt-2">
+                                  <tbody className="text-gray-600 text-sm">
+                                    {entry.itemsData.map((item, itemIndex) => (
+                                      <tr
+                                        key={itemIndex}
+                                        className="border-b last:border-none"
+                                      >
+                                        <td className="p-3">{item.name}</td>
+                                        <td className="p-3">{item.count}</td>
+                                        <td className="p-3">{item.price} 원</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </tbody>
                 </table>
-              </div>
-            </div>
 
-            {/* Box 4: Upload Receipt */}
-            <div className="mt-6 flex flex-col items-center">
-              <button
-                className="w-28 py-3 text-sm bg-blue-500 text-white rounded-lg font-semibold mb-4 hover:bg-blue-600"
-                onClick={() => document.getElementById("file-upload")?.click()}
-              >
-                영수증 업로드
-              </button>
-              <input
-                type="file"
-                id="file-upload"
-                style={{ display: "none" }}
-                onChange={handleUpload}
-              />
-            </div>
-            <ClovaOCR signer={signer}></ClovaOCR>
-            <ReceiveDonation
+              </div>
+                <ReceiveDonation
               signer={signer}
               adminSigner={adminSigner}
               contract={contract!}
             ></ReceiveDonation>
+            </div>
           </>
         )}
       </div>
