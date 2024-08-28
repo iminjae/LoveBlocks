@@ -35,7 +35,7 @@ const HeaderOrg: FC<HeaderProps> = ({ signer, setSigner, setProvider }) => {
           </button>
           <button
             className="text-toss-gray hover:text-toss-blue"
-            onClick={() => navigate("/sungwoo")}
+            onClick={() => navigate("/dashboard")}
           >
             대시보드
           </button>
