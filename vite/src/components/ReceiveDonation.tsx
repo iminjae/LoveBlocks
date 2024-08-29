@@ -5,6 +5,7 @@ import { Wallet } from "ethers";
 import axios from "axios";
 import donationAbi from "../abis/donationAbi.json";
 import { donationContractAddress } from "../abis/contarctAddress";
+import ButtonTemplate from "./BottonTemplate";
 
 interface ReceiveDonationProps {
   signer: JsonRpcSigner | null;
@@ -143,6 +144,7 @@ const ReceiveDonation: FC<ReceiveDonationProps> = ({
     if (!transactionId) return;
     getConfirmations();
   }, [transactionId]);
+  
 
   return (
     <div className="flex justify-end">

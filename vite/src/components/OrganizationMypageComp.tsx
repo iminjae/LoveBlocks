@@ -54,8 +54,8 @@ const OrganizationMypageComp: React.FC<OrganizationMypageCompProps> = ({
       items: [{ name: "라면", quantity: 100, amount: "$100" }],
     },
   ]);
-  const [totalDonations, setTotalDonations] = useState(500);
-  const [withdrawnAmount, setWithdrawnAmount] = useState(0);
+  const [totalDonations, setTotalDonations] = useState(67.54);
+  const [withdrawnAmount, setWithdrawnAmount] = useState(29.59);
   const [selectedIndexes, setSelectedIndexes] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState<boolean[]>([]);
   const [isReceived, setIsReceived] = useState<boolean[]>([]);
@@ -208,7 +208,7 @@ const OrganizationMypageComp: React.FC<OrganizationMypageCompProps> = ({
                   ></div>
                 </div>
                 <p className="text-gray-600 text-sm text-l mt-2">
-                  프로젝트 모금 기간 : 30일 (2024.08.01 - 2024.08.30)
+                  프로젝트 모금 기간 : 29일 (2024.08.01 - 2024.08.29)
                 </p>
               </div>
             </div>

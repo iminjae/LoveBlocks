@@ -69,9 +69,11 @@ const MyPage: FC = () => {
       mintNftAbi,
       signer
     );
-
+    console.log("@@@@@@@@@@");
     const tokenUri = await mintNftContract.tokenURI(tokenId);
+    console.log(tokenUri);
     const metadata = await axios.get(tokenUri);
+    console.log(metadata);
     return metadata.data;
   };
 
