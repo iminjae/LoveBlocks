@@ -103,7 +103,7 @@ const ClovaOCR: FC<ClovaOCRPorps> = ({ signer, addReceiptData }) => {
     }
     try {
       const response = await axios.post(
-        "http://localhost:5000/proxy/clova-ocr",
+        "http://localhost:5001/proxy/clova-ocr",
         formData,
         {
           headers: {

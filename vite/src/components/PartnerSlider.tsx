@@ -1,8 +1,9 @@
 import styled, { keyframes } from "styled-components";
-import binanceImg from "../assets/binanceImg.png";
+
 import likelionImg from "../assets/likelionImg.png";
-import bithumbImg from "../assets/bithumbImg.png";
-import upbitImg from "../assets/upbitImg.png";
+import loveblocksImg from "../assets/loveblocks.png";
+import bistromapImg from "../assets/bistromap.png";
+import mintywayImg from "../assets/mintyway.png";
 
 // 슬라이드 애니메이션 정의
 const slideAnimation = keyframes`
@@ -24,8 +25,8 @@ const SliderContainer = styled.div`
 // 슬라이드 콘텐츠 스타일 정의
 const SliderContent = styled.div`
   display: flex;
-  width: calc(200px * 4 * 2); /* 두 배로 설정된 슬라이더 항목의 총 너비 */
-  animation: ${slideAnimation} 20s linear infinite;
+  width: calc(200px * 4 * 4); /* 슬라이더 항목의 총 너비 */
+  animation: ${slideAnimation} 40s linear infinite; /* 애니메이션 시간을 늘려서 부드럽게 */
 `;
 
 // 슬라이더 항목 스타일 정의
@@ -48,12 +49,12 @@ const PartnerItem = styled.div`
 `;
 
 const PartnerSlider: React.FC = () => {
-  const partners = [binanceImg, likelionImg, bithumbImg, upbitImg];
+  const partners = [likelionImg, loveblocksImg, bistromapImg, mintywayImg];
 
   return (
     <SliderContainer>
       <SliderContent>
-        {[...partners, ...partners].map((partner, index) => (
+        {[...partners, ...partners, ...partners, ...partners].map((partner, index) => (
           <PartnerItem key={index}>
             <img src={partner} alt={`Partner ${index + 1}`} />
           </PartnerItem>

@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const upload = multer();
 
-const PORT = 5000;
+const PORT = 5001;
 app.post("/proxy/clova-ocr", upload.single("file"), async (req, res) => {
   console.log("REQ ", req.body);
   console.log("FILE", req.file);
