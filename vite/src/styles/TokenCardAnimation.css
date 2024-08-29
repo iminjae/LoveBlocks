@@ -1,0 +1,19 @@
+/* TokenCardAnimation.css */
+.selected-token-card {
+    border: 4px solid transparent;
+    animation: border-glow 1.5s infinite;
+    border-image: linear-gradient(45deg, #ff6ec4, #7873f5) 1;
+  }
+  
+  @keyframes border-glow {
+    0% {
+      border-image: linear-gradient(45deg, #ff6ec4, #7873f5) 1;
+    }
+    50% {
+      border-image: linear-gradient(45deg, #7873f5, #ff6ec4) 1;
+    }
+    100% {
+      border-image: linear-gradient(45deg, #ff6ec4, #7873f5) 1;
+    }
+  }
+  

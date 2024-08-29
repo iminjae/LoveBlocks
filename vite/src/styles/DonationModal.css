@@ -1,0 +1,41 @@
+/* 오버레이 스타일 */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* 배경을 반투명 검정으로 설정 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999; /* 모달보다 낮게 설정 */
+}
+
+/* 모달 오버레이 스타일 */
+.donation-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001; /* overlay 위에 표시 */
+}
+
+/* 모달 콘텐츠 스타일 */
+.donation-modal-content {
+  position: relative;
+  background-color: white;
+  padding: 20px; /* padding을 줄여서 모달 크기 조절 */
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  max-width: 400px; /* 모달의 가로 크기를 줄임 */
+  width: 100%;
+  z-index: 1002; /* overlay 위에 표시 */
+  text-align: center;
+}
+
+/* footer 숨기기 */
+.footer-hidden {
+  display: none;
+}
